@@ -1,0 +1,10 @@
+
+# Default htaccess for the application. This set up will redirect all
+# requests to the application. Don't mess with the syntax of the rewrite
+# rule, it is str_replaced by the install script if the paths are
+# different
+
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php/$1 [L]

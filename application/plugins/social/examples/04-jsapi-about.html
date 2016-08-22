@@ -1,0 +1,12 @@
+<p>If you can't or don't want to use the default wrapper class <code>.vsac-social</code>,
+    you can append the share buttons to any element via javascript:</p>
+<pre><code>window.VSAC.social('.css-selector');</code></pre>
+<p>Similarly, if you are not happy with the default button formatter, you can
+    override it with:</p>
+<pre><code>window.VSAC.social.btn_formatter(fn);</code></pre>
+<p>Where <code>fn</code> is your formatter callback.  It will receive the button
+    attributes (an object) as it's first argument, and it should return an
+    HTML element or jQuery object ready to be appended to the wrapper.</p>
+<p>To restore the default formatter, call <code>btn_formatter</code> with no
+    parameters.</p>
+

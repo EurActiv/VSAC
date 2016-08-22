@@ -1,0 +1,23 @@
+<p>Place social share buttons in an element without the class <code>.vsac-social</code>:</p>
+<p id="some-other-wrapper"></p>
+<script>window.VSAC.social('#some-other-wrapper');</script>
+
+<p>A custom formatter that just outputs a list of button object properties (15
+second timeout):</p>
+<div id="my-formatted-wrapper"></div>
+<script>setTimeout(function () {
+    window.VSAC.social.btn_formatter(function (obj) {
+        var ul = $('<ul />'), li;
+        $.each(obj, function (prop, value) {
+            li = $('<li />')
+                .text(prop)
+                .wrapInner('<code />')
+                .append($('<span>').text(' : ' + value));
+            li.appendTo(ul);
+        });
+        return ul;
+    });
+    window.VSAC.social('#my-formatted-wrapper');
+
+}, 15000);</script>
+

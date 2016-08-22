@@ -1,0 +1,112 @@
+/*.ea-social > span {
+    display:inline-block;
+    padding: 3px 8px;
+    margin: 0 5px 0 0;
+    min-width:80px;
+    font-size:13px;
+    > a {
+        position:relative;
+        display:inline-block;
+        float:left;
+        &:hover {
+            text-decoration:none;
+        }
+        i {
+            font-size:15px;
+            position:relative;
+            top:1px;
+        }
+    }
+    b {
+        font-weight:normal;
+    }
+    span {
+        display:inline-block;
+        float:right;
+        a:hover  {
+            text-decoration:underline;
+        }
+    }
+}
+
+@include responsive-xs-only {
+    .ea-social > span {
+        min-width:0!important;
+        span, b {
+            display:none;
+        }
+    }
+}
+*/
+
+
+[class*="vsac-social-"] {
+    position:relative;
+    padding-left:30px;
+    text-align:right;
+    min-height:30px;
+    i {
+        position:absolute;
+        left:10px;
+        height:inherit;
+        line-height:inherit;
+    }
+    span {
+        min-width:100px;
+        padding-left:10px;
+    }
+    b {
+        padding-left:5px;
+    }
+}
+
+
+/**
+ * A snippet taken from:
+ * http://lipis.github.io/bootstrap-social/
+ */
+
+@mixin ea-social-social($color-bg, $color: #fff) {
+  background-color: $color-bg;
+  color: $color;
+  &:link, &:visited, &:hover,&:active {
+      color: $color;
+  }
+  &:hover,&:active  {
+      background-color:darken($color-bg, 15%);
+      span {
+          text-decoration:underline;
+      }
+  }
+}
+
+
+.vsac-social-adn           { @include ea-social-social(#d87a68); }
+.vsac-social-bitbucket     { @include ea-social-social(#205081); }
+.vsac-social-dropbox       { @include ea-social-social(#1087dd); }
+.vsac-social-email         { @include ea-social-social(#615f5d); }
+.vsac-social-facebook      { @include ea-social-social(#3b5998); }
+.vsac-social-flickr        { @include ea-social-social(#ff0084); }
+.vsac-social-foursquare    { @include ea-social-social(#f94877); }
+.vsac-social-github        { @include ea-social-social(#444444); }
+.vsac-social-google        { @include ea-social-social(#dd4b39); }
+.vsac-social-instagram     { @include ea-social-social(#3f729b); }
+.vsac-social-linkedin      { @include ea-social-social(#007bb6); }
+.vsac-social-microsoft     { @include ea-social-social(#2672ec); }
+.vsac-social-odnoklassniki { @include ea-social-social(#f4731c); }
+.vsac-social-openid        { @include ea-social-social(#f7931e); }
+.vsac-social-pinterest     { @include ea-social-social(#cb2027); }
+.vsac-social-reddit        { @include ea-social-social(#eff7ff, #000); }
+.vsac-social-soundcloud    { @include ea-social-social(#ff5500); }
+.vsac-social-tumblr        { @include ea-social-social(#2c4762); }
+.vsac-social-twitter       { @include ea-social-social(#55acee); }
+.vsac-social-vimeo         { @include ea-social-social(#1ab7ea); }
+.vsac-social-vk            { @include ea-social-social(#587ea3); }
+.vsac-social-yahoo         { @include ea-social-social(#720e9e); }
+.vsac-social-whatsapp      { @include ea-social-social(#36ae49); }
+
+/* some additional buttons */
+.vsac-social-comments      { @include ea-social-social(#eee, #333); }
+.vsac-social-print         { @include ea-social-social(#f3f3f3, #333); }
+
+

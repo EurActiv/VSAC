@@ -1,0 +1,39 @@
+<p>To add more buttons to the share bar, simply add the markup to the wrapper
+    element when the page is generated. The buttons will be appended to the
+    wrapper after whatever markup is already there. If using the default
+    formatter, the buttons markup should be something like:</p>
+<pre><code>a.btn.vsac-social-[vendor]   // see below for possible [vendor] values
+    i.fa.fa-[icon]                      // the font awesome icon
+    span.hidden-xs.hidden-sm            // the vendor name/label (should wrap all text)
+    b.hidden-xs                         // the share count (optional)
+</code></pre>
+
+<p>The <code>[vendor]</code> in <code>a.btn.vsac-social-[vendor]</code> is used
+  to apply vendor-specific brand colors. Built in classes are:</p>
+<ul>
+    <li>.vsac-social-adn</li>
+    <li>.vsac-social-bitbucket</li>
+    <li>.vsac-social-dropbox</li>
+    <li>.vsac-social-facebook</li>
+    <li>.vsac-social-flickr</li>
+    <li>.vsac-social-foursquare</li>
+    <li>.vsac-social-github</li>
+    <li>.vsac-social-google</li>
+    <li>.vsac-social-instagram</li>
+    <li>.vsac-social-linkedin</li>
+    <li>.vsac-social-microsoft</li>
+    <li>.vsac-social-odnoklassniki</li>
+    <li>.vsac-social-openid</li>
+    <li>.vsac-social-pinterest</li>
+    <li>.vsac-social-reddit</li>
+    <li>.vsac-social-soundcloud</li>
+    <li>.vsac-social-tumblr</li>
+    <li>.vsac-social-twitter</li>
+    <li>.vsac-social-vimeo</li>
+    <li>.vsac-social-vk</li>
+    <li>.vsac-social-yahoo</li>
+    <li>.vsac-social-comments</li>
+    <li>.vsac-social-print</li>
+</ul>
+<p>If you use your own vendor class, be sure to prefix it with
+<code>vsac-social-*</code> to ensure that all the generic styling is applied.
