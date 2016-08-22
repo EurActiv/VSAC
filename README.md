@@ -46,14 +46,16 @@ The application is easy to extend and supports writing your own plugins or overr
   * [Writing Modules][3]: a guide to writing modules (aka, libraries) or overriding existing ones.
   * [Writing CLI commands][4]: a guide to writing command line utilities.
 
+For examples and how-tos, see the [examples][5].
 
 ##License and contributions
 
-This application is provided under the [MIT License][5]. We'd be very happy to get contributions, they must simply be made with the same license.
+This application is provided under the [MIT License][6]. We'd be very happy to get contributions, they must simply be made with the same license.
 
 
-[1]: docs/overview.md
-[2]: docs/plugins.md
-[3]: docs/modules.md
-[4]: docs/cli.md
-[5]: https://opensource.org/licenses/MIT
+[1]: ./application/docs/overview.md
+[2]: ./application/docs/plugins.md
+[3]: ./application/docs/modules.md
+[4]: ./application/docs/cli.md
+[5]: https://github.com/EurActiv/VSAC-Examples
+[6]: https://opensource.org/licenses/MIT

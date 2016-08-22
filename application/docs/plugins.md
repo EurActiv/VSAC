@@ -2,7 +2,7 @@
 
 **Read First:** [Application Overview](./overview.md)
 
-**See Also:** [Examples Extension](#)
+**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
 
 **Important:** All PHP files should be in the `VSAC` namespace.
 
@@ -58,4 +58,4 @@ Plugins must implement the following functions in their `functions.php` file:
     }
 
 
-The best way to get started is to take a look at the examples in the [example extension](#).
+The best way to get started is to take a look at the examples in the [example extension](https://github.com/EurActiv/VSAC-Examples).
