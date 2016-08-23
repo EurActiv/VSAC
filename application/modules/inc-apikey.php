@@ -34,7 +34,7 @@ function apikey_test()
 {
     $key = md5(time());
 
-    force_conf(plugin(), 'api_key', $key);
+    force_conf('api_key', $key);
     $get =& superglobal('get');
     if (isset($get['api_key'])) {
         unset($get['api_key']);

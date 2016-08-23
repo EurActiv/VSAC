@@ -132,7 +132,12 @@
             jsonp('https://graph.facebook.com/', {
                 id: url
             }, function (response) {
-                var shares = parseInt(response.shares || 0, 10);
+                var shares = 0;
+                if (response.hasOwnProperty('shares')) {
+                    shares = parseInt(response.shares || 0, 10);
+                } else if (response.hasOwnProperty('share')) {
+                    shares = parseInt(response.share.share_count || 0, 10);
+                }
                 cache.set('facebook_' + url, shares);
                 callback(shares);
                 if (undefined !== key && response.id === url) {

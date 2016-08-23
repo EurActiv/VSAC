@@ -49,15 +49,14 @@ function shortener_test()
 
     $api_key_key = $driver . '_shortener_api_key';
     $api_key = option($api_key_key, '');
-
     if (!$base || !$api_key) {
         return sprintf('Cannot test %s unless config items %s and %s are set',
                         $driver, $base_key, $api_key_key);
     }
 
-    force_conf(plugin(), 'shortener_base_url', $base);
-    force_conf(plugin(), 'shortener_api_key', $api_key);
-    force_conf(plugin(), 'http_allowed_domains', ['example.com']);
+    force_conf('shortener_base_url', $base);
+    force_conf('shortener_api_key', $api_key);
+    force_conf('http_allowed_domains', ['example.com']);
 
     $long = 'http://www.example.com/';
     $short = shortener_shorten($long);

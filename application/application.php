@@ -347,7 +347,7 @@ function modules()
     if (!is_null($modules)) {
         return $modules;
     }
-    $modules = scan_include_dirs('framework');
+    $modules = scan_include_dirs('modules');
     $modules = array_map(function ($file) {
         $regex = '/^inc-([a-z0-9\-]+)\.php$/';
         return preg_match($regex, $file, $m) ? $m[1] : false;
@@ -398,12 +398,13 @@ function driver($module, $force_driver = false)
 {
     static $drivers = array();
 
+    $driver_option = str_replace('-', '_', $module) . '_driver';
     if (is_null($force_driver)) {
         if (isset($drivers[$module])) {
             unset($drivers[$module]);
         }
-        force_conf(plugin(), $module . '_driver', null);
-        if (!option($module . '_driver', '')) {
+        force_conf($driver_option, null);
+        if (!option($driver_option, '')) {
             return '';
         }
     }
@@ -413,12 +414,12 @@ function driver($module, $force_driver = false)
             unset($drivers[$driver]);
         }
         if (empty($drivers[$module])) {
-            force_conf(plugin(), $module . '_driver', $force_driver);
+            force_conf($driver_option, $force_driver);
         }
     }
 
     if (empty($drivers[$module])) {
-        $driver = config($module . '_driver', '');
+        $driver = config($driver_option, '');
         $drivers[$module] = $driver;
         require_once 'modules/' . $module . '-drivers/' . $driver . '.php';
     }

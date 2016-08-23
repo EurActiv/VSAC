@@ -53,8 +53,8 @@ function kval_sysconfig()
 /** @see example_module_test() */
 function kval_test()
 {
-    force_conf(plugin(), 'kval_ttl', 2);
-    force_conf(plugin(), 'kval_quota', 1024 * 1024);
+    force_conf('kval_ttl', 2);
+    force_conf('kval_quota', 1024 * 1024);
     $key = 'test_' . time();
     $value = md5($key);
     $value2 = md5($key);

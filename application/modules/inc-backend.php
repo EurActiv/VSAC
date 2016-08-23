@@ -26,7 +26,7 @@ function backend_sysconfig()
 /** @see example_module_test() */
 function backend_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 
@@ -63,7 +63,15 @@ function backend_head($title, array $options = array(), callable $more = null)
                 </h1>
                 <p class="col-sm-4 col-md-3 text-right" style="line-height:44px">
                     <a href="<?= router_base_url() ?>">Directory</a>
-                    | <?= fn_exists('auth_login_btn') ? auth_login_btn('&nbsp;'):''; ?>
+                    <?php if (fn_exists('auth_login_btn')) {
+                        echo auth_login_btn('| ');
+                    } ?>
+                    <?php if (fn_exists('auth_is_authenticated') && auth_is_authenticated()) {
+                        printf(
+                            '| <a href="%s">System Check</a>',
+                            router_url('syscheck.php')
+                        );
+                    } ?>
                 </p>
             </div>
             <hr>
@@ -293,7 +301,7 @@ function backend_config_table()
     $auth = fn_exists('auth_is_authenticated') && auth_is_authenticated();
     $config = array();
     $get_config = function ($add) use (&$config) {
-        $fn = __NAMESPACE__ . '\\' . $add . '_config_items';
+        $fn = __NAMESPACE__ . '\\' . str_replace('-', '_', $add) . '_config_items';
         if (function_exists($fn)) {
             $config = array_merge($config, call_user_func($fn));
         }
@@ -332,7 +340,6 @@ function backend_config_table()
         <?php
         $print_config_table();
     };
-
     $get_config(plugin());
     foreach (used_modules() as $module) {
         $get_config($module);

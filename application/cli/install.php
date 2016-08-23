@@ -211,7 +211,7 @@ function add_vendor_phar()
         if (pathinfo($a, PATHINFO_EXTENSION) !== 'phar') {
             return cli_err('file is not a phar archive');
         }
-        return $a;
+        return 'phar://' . $a;
     });
 }
 
@@ -292,17 +292,17 @@ if (!is_writable(dirname($write_to))) {
 }
 
 
+if (!cli_ask_bool("Install script will be saved at {$write_to}. That OK?", true)) {
+    die();
+}
 if (file_exists($write_to)) {
-    if (!cli_ask_bool(sprintf('File "%s" already exists, delete it?', $write_to))) {
+    if (!cli_ask_bool(sprintf('File "%s" already exists, delete it?', $write_to), false)) {
         die();
     }
     unlink($write_to);
 }
 
 
-if (!cli_ask_bool("Install script will be saved at {$write_to}. That OK?", true)) {
-    die();
-}
 
 cli_section('Web environment', function () {
     $vars = &variables();
@@ -360,12 +360,17 @@ if ($vars['htaccess']) commands([
     sprintf('put("%s", $htaccess);', $htpath)
 ]);
 
-$visit = $vars['web_controller'];
-if ($vars['htaccess']) {
-    $visit = dirname($visit) . '/';
-}
+
+$visit = dirname($vars['web_controller']);
+$visit = $visit == '.' ? 'syscheck.php' : $visit . '/syscheck.php';
+
 commands("echo \"Install script ran.\\n\";");
 commands("echo \"Go to http://<server_name>/$visit to see if it works.\\n\";");
+$users = framework_config('users', array());
+$user = array_keys($users)[0];
+$passphrase = $users[$user];
+commands("echo \"The default user is '$user'\\n\";");
+commands("echo \"The default passphrase is '$passphrase'\\n\";");
 
 file_put_contents($write_to, commands());
 cli_say("The install script is located at {$write_to}. To run it, do:");

@@ -20,6 +20,28 @@ function build_config_items()
 /** @see example_module_sysconfig() */
 function build_sysconfig()
 {
+    if (strpos(strtolower(PHP_OS), 'win') === 0) {
+        return 'A *nix server is required';
+    }
+    if (!exec('which uglifyjs')) {
+        return 'UglifyJS is not installed (https://github.com/mishoo/UglifyJS2)';
+    }
+    if (!exec('which compass')) {
+        return 'compass not installed (http://compass-style.org/)';
+    }
+    $extract_version = function ($cmd) {
+        exec($cmd, $out);
+        $version = array_shift($out);
+        return $version ? preg_replace('/[^\.\d]/', '', $version) : '0';
+    };
+    $uglify_version = $extract_version('uglifyjs --version');
+    if (version_compare($uglify_version, '2.4', '<')) {
+        return 'UglifyJS >= 2.4 required (https://github.com/mishoo/UglifyJS2)';
+    }
+    if (version_compare($extract_version('compass version'), '1.0', '<')) {
+        return 'compass >= 1.0 required (http://compass-style.org/)';
+    }
+    return true;
 }
 
 /** @see example_module_test() */
@@ -139,7 +161,7 @@ function build_compile_sass($dirname, $base_url = false)
 function build_sass_exec($dirname, $compressed, $base_url = false)
 {
     if (!$base_url) {
-        $base_url = router_any_file_url($dirname);
+        $base_url = router_plugin_url($dirname);
     }
     if (substr($dirname, -1) !== '/') {
         $dirname .= '/';

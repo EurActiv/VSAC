@@ -36,7 +36,7 @@ function cli_sysconfig()
 /** @see example_module_test() */
 function cli_test()
 {
-    return 'no tests to run';
+    return true;
 }
 
 

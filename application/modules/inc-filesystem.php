@@ -19,7 +19,10 @@ function filesystem_config_items()
 /** @see example_module_sysconfig() */
 function filesystem_sysconfig()
 {
-    //return true;
+    if (strpos(strtolower(PHP_OS), 'win') === 0) {
+        return 'A *nix server is required';
+    }
+    return true;
 }
 
 /** @see example_module_test() */

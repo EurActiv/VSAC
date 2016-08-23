@@ -25,7 +25,7 @@ function form_sysconfig()
 /** @see example_module_test() */
 function form_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 //----------------------------------------------------------------------------//

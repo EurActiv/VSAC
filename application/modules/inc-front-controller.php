@@ -25,7 +25,7 @@ function front_controller_sysconfig()
 /** @see example_module_test() */
 function front_controller_test()
 {
-    return 'no tests to run';
+    return true;
 }
 
 //----------------------------------------------------------------------------//

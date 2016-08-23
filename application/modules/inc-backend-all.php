@@ -32,6 +32,6 @@ function backend_all_sysconfig()
 /** @see example_module_test() */
 function backend_all_test()
 {
-    return 'No tests to run';
+    return true;
 }
 

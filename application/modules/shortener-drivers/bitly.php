@@ -33,7 +33,7 @@ function bitly_shorten($url)
         return $url;
     }
     $arr = json_decode($json, true);
-    if ($arr['data']['long_url'] != $url || !$arr['data']['url']) {
+    if (empty($arr['data']) || $arr['data']['long_url'] != $url || !$arr['data']['url']) {
         return $url;
     }
     return $arr['data']['url'];

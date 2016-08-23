@@ -25,7 +25,7 @@ function auth_sysconfig()
 /** @see example_module_test() */
 function auth_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 //----------------------------------------------------------------------------//

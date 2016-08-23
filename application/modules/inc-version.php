@@ -32,7 +32,7 @@ function version_sysconfig()
 /** @see example_module_test() */
 function version_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 //----------------------------------------------------------------------------//
@@ -131,7 +131,7 @@ function version_url($version, $minify = true, $debug = false)
         'no_minify' => $minify ? '0' : '1',
         'debug'     => $debug ? '1' : '0',
     );
-    return router_add_query(requested_url(), $query);
+    return router_add_query(request_url(), $query);
 }
 
 /**
@@ -165,6 +165,13 @@ function version_header()
     <?php
 }
 
+
+/**
+ * Works about the same as docs_examples, but looks in the current version
+ * directory instead of the plugin root.
+ *
+ * @return void
+ */
 function version_examples()
 {
     version_get($version);
@@ -317,7 +324,7 @@ function version_reverter()
             var msg, actual;
             e.preventDefault();
             msg = 'WARNING! Any changes made to v-edge will be lost! Please '
-                + 'confirm you want to do this by typing "revert version' + v
+                + 'confirm you want to do this by typing "revert version ' + v
                 + '" in the box below.';
             actual = prompt(msg);
             if (actual) {
@@ -359,7 +366,7 @@ function version_publisher()
             $confirm = (string) request_post('pub-confirm');
 
             if ($deploy_to > 0) {
-                $expected = 'overwrite version 1';
+                $expected = 'overwrite version ' . $deploy_to;
             } else {
                 $expected = 'create new version';
                 $deploy_to = max(array_map('intval', version_get_all())) + 1;

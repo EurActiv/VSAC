@@ -27,7 +27,7 @@ function response_sysconfig()
 /** @see example_module_test() */
 function response_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 

@@ -25,7 +25,7 @@ function router_sysconfig()
 /** @see example_module_test() */
 function router_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 
@@ -44,19 +44,6 @@ function router_use_rewriting()
     return framework_config('pretty_urls', false, true);
 }
 
-/**
- * The base directory for the router, used in calculating paths. Throws an error
- * if the constant ROUTER_BASE_DIR hasn't been set
- *
- * @return string
- */
-function router_basedir()
-{
-    if (!defined('ROUTER_BASE_DIR')) {
-        err('Constant ROUTER_BASE_DIR not defined.');
-    }
-    return constant('ROUTER_BASE_DIR');
-}
 
 /**
  * The scheme to use when generating URLs for the current request.
@@ -155,8 +142,8 @@ function router_url($path, $with_scheme = false)
 
 
 /**
- * A url to a file, without the protections of router_plugin_url or
- * router_files_url
+ * A url to a file, even if in another plugin. Can also be used for URLs
+ * to a framework file. The caveat is that the file must exist.
  *
  * @param string $abspath the absolute path to the file
  * @param bool $with_scheme include the scheme (http/https) in the URL
@@ -165,18 +152,27 @@ function router_url($path, $with_scheme = false)
 function router_any_file_url($abspath, $with_scheme = false)
 {
     $realpath = filesystem_realpath($abspath);
+    if (!$realpath) {
+        err('File does not exist: ' . $abspath);
+    }
     
     if (strpos($realpath, filesystem_plugin_path()) === 0) {
         return router_plugin_url($realpath);
     }
-
-    if (strpos($realpath, router_basedir()) !== 0) {
-        err('could not generate url to file '.$abspath, __FILE__.__LINE__);
+    $include_paths = get_include_paths();
+    foreach ($include_paths as $include_path) {
+        if (strpos($realpath, $include_path . '/plugins/') === 0) {
+            $path = substr($realpath, strlen($include_path . '/plugins'));
+            return router_url($path);
+        }
     }
-
-    $relativepath = substr($realpath, strlen(request_server('DOCUMENT_ROOT')) + 1);
-    return router_base_url() . $relativepath;
-
+    foreach ($include_paths as $include_path) {
+        if (strpos($realpath, $include_path . '/framework/') === 0) {
+            $path = substr($realpath, strlen($include_path . '/framework'));
+            return router_url($path);
+        }
+    }
+    err('Could not generate url to file: ' . $abspath);
 }
 
 

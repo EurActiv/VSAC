@@ -63,8 +63,8 @@ function cal_sysconfig()
 /** @see example_module_test() */
 function cal_test()
 {
-    force_conf(plugin(), 'cal_ttl', 2);
-    force_conf(plugin(), 'cal_quota', 1024 * 1024);
+    force_conf('cal_ttl', 2);
+    force_conf('cal_quota', 1024 * 1024);
     $item_key = 'test_' . time();
     $item_value = md5($item_key);
     $permutation_value1 = md5($item_value);

@@ -25,7 +25,7 @@ function request_sysconfig()
 /** @see example_module_test() */
 function request_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 //----------------------------------------------------------------------------//
