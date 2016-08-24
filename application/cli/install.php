@@ -362,7 +362,7 @@ if ($vars['htaccess']) commands([
 
 
 $visit = dirname($vars['web_controller']);
-$visit = $visit == '.' ? 'syscheck.php' : $visit . '/syscheck.php';
+$visit = $visit == '.' ? 'system-check.php' : $visit . '/system-check.php';
 
 commands("echo \"Install script ran.\\n\";");
 commands("echo \"Go to http://<server_name>/$visit to see if it works.\\n\";");

@@ -56,24 +56,13 @@ function backend_head($title, array $options = array(), callable $more = null)
         <?php if ($more) { call_user_func($more); } ?>
     </head>
     <body>
-        <div class="container" style="padding-top:21px">
-            <div class="row">
-                <h1 class="col-sm-8 col-md-9" style="margin-top:0;line-height:44px">
-                    <?= $title ?>
-                </h1>
-                <p class="col-sm-4 col-md-3 text-right" style="line-height:44px">
-                    <a href="<?= router_base_url() ?>">Directory</a>
-                    <?php if (fn_exists('auth_login_btn')) {
-                        echo auth_login_btn('| ');
-                    } ?>
-                    <?php if (fn_exists('auth_is_authenticated') && auth_is_authenticated()) {
-                        printf(
-                            '| <a href="%s">System Check</a>',
-                            router_url('syscheck.php')
-                        );
-                    } ?>
-                </p>
+        <div class="container">
+            <div class="pull-right" style="margin-top:23px">
+                <?php backend_main_menu() ?>
             </div>
+            <h1>
+                <?= $title ?>
+            </h1>
             <hr>
             <?php backend_read_flashbag(); ?>
     <?php
@@ -401,6 +390,42 @@ function backend_codelink($url, $text = false)
 //----------------------------------------------------------------------------//
 //-- Private functions                                                      --//
 //----------------------------------------------------------------------------//
+
+function backend_main_menu()
+{
+    $get_link_text = function ($filename) {
+        $text = substr($filename, 0, -4);
+        $text = preg_replace('/[^a-z]/i', ' ', $text);
+        $text = ucwords($text);
+        return $text;
+    };
+
+    $links = scan_include_dirs('/framework');
+    $links = array_filter($links, function ($link) {
+        return substr($link, -4) === '.php'
+            && $link !== 'index.php'
+            && $link !== 'login.php';
+    });
+    ?><div class="dropdown">
+        <button
+            class="btn btn-info dropdown-toggle"
+            type="button"
+            data-toggle="dropdown"
+        ><i class="fa fa-lg fa-gear"></i></button>
+        <ul class="dropdown-menu dropdown-menu-right"><?php
+            $li = '<li><a href="%s">%s</a></li>';
+            printf($li, router_base_url(), 'Directory');
+            if (fn_exists('auth_login_btn')) {
+                echo '<li>', auth_login_btn(' '), '</li>';
+            }
+            echo '<li role="separator" class="divider"></li>';
+            foreach ($links as $link) {
+                printf($li, router_url($link), $get_link_text($link));
+            }
+        ?></ul>
+    </div><?php
+
+}
 
 /**
  * Print the asset links in the document head. Separated from backend_head() to

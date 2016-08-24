@@ -7,6 +7,29 @@
 namespace VSAC;
 
 //----------------------------------------------------------------------------//
+//-- pre-bootstrapping, on include                                          --//
+//----------------------------------------------------------------------------//
+
+
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    use_module('error');
+    $trace = debug_backtrace();
+    error_handle_error($errno, $errstr, $errfile, $errline, $trace);
+    return true;
+});
+
+set_exception_handler(function ($ex) {
+    use_module('error');
+    error_handle_error(
+        $$ex->getCode(),
+        $ex->getMessage(),
+        $ex->getFile(),
+        $ex->getLine(),
+        $ex->getTrace()
+    );
+});
+
+//----------------------------------------------------------------------------//
 //-- bootstrapping                                                          --//
 //----------------------------------------------------------------------------//
 
@@ -565,7 +588,11 @@ function conf($plugin, $name, $default, $raise_errors)
 }
 
 /**
- * Get a framework configuration setting
+ * Get a framework configuration setting.
+ *
+ * @param string $name @see conf()
+ * @param string $default @see conf()
+ * @return mixed the config option value
  */
 function framework_config($name, $default)
 {
@@ -573,7 +600,16 @@ function framework_config($name, $default)
 }
 
 
-
+/**
+ * Get a framework config option with loose checking
+ * @param string $name @see conf()
+ * @param string $default @see conf()
+ * @return mixed the config option value
+ */
+function framework_option($name, $default)
+{
+    return conf('_framework', $name, $default, false);
+}
 
 
 //----------------------------------------------------------------------------//

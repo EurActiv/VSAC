@@ -14,6 +14,8 @@ $config = array(
         'example'    => 'An Example Passphrase.',
     ),
 
+    'error_driver' => 'sqliteerror',
+
     // testing
     'bitly_shortener_base_url'     =>  'j.mp',
     'bitly_shortener_api_key'      =>  '',
