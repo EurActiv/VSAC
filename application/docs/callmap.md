@@ -1,4 +1,4 @@
-#Versioned assets
+#API Call Mapping
 
 **See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples) | [Example Logging Controller](https://github.com/EurActiv/VSAC-Examples/blob/master/examples/plugins/example-plugin/example-controller-logging.php)
 
@@ -6,11 +6,11 @@ The application will generate call maps to help you map your service oriented ar
 
 A callmap the architecture overview looks something like this:
 
-![An overview call map](./callmap.png)
+![An overview call map](./img/callmap.png)
 
 You can drill down to get more detail on individual elements in the callmap. A map that looks at what a single client application is doing looks something like this:
 
-![An overview call map](./callmap-client.png)
+![An overview call map](./img/callmap-client.png)
 
 To make a plugin/controller callmap aware, call the function `callmap_log`, which has the following signature:
 

@@ -1,4 +1,4 @@
-#Writing modules
+#Application Configuration
 
 **Read First:** [Application Overview](./overview.md)
 

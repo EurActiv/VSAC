@@ -13,7 +13,7 @@ as `application.phar`.
 
 When done, go to `http://[your-server]/[path/to/application/]system-check.php` to make sure everything works. You should see something like this:
 
-![System Check Screen](./syscheck.png)
+![System Check Screen](./img/syscheck.png)
 
 
 
