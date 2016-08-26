@@ -33,6 +33,20 @@ set_exception_handler(function ($ex) {
 //-- bootstrapping                                                          --//
 //----------------------------------------------------------------------------//
 
+
+/**
+ * Set the application data directory. This should be called more or less
+ * immediately after including this file, before adding include paths or
+ * bootstrapping.
+ *
+ * @return void
+ */
+function set_data_directory($path)
+{
+    data_directory($path);
+}
+
+
 /**
  * Bootstrap the application in a web server environment.
  *
@@ -71,6 +85,7 @@ function bootstrap_cli()
     use_module('cli');
 
 }
+
 
 //----------------------------------------------------------------------------//
 //-- utilities                                                              --//
@@ -128,14 +143,44 @@ function data_directory($path = null)
     return $directory;
 }
 
+
 /**
- * Set the application data directory
+ * Fetch one of the superglobals ($_SERVER, $_REQUEST, $_GET, $_POST). Exists to
+ * allow overriding for testing. 
  *
- * @return void
+ * @param string $name one of superglobal namse, lowercase with leading
+ * underscore removed.
+ * @param mixed $override set to an array to override the existing superglobal,
+ * or anything else but NULL to restore the default superglobal.
+ *
+ * @return array the superglobal, returned by reference
  */
-function set_data_directory($path)
+function &superglobal($name, $override = null)
 {
-    data_directory($path);
+    static $overrides = array();
+    if (is_array($override)) {
+        $overrides[$name] = $override;
+    } elseif (!is_null($override)) {
+        if (isset($overrides[$name])) {
+            unset($overrides[$name]);
+        }
+    }
+    if (isset($overrides[$name])) {
+        return $overrides[$name];
+    }
+
+    // Note: can't use variable variables for superglobals
+    switch ($name) {
+        case 'global'   : return $GLOBALS   ;
+        case 'server'   : return $_SERVER   ;
+        case 'get'      : return $_GET      ;
+        case 'post'     : return $_POST     ;
+        case 'files'    : return $_FILES    ;
+        case 'cookie'   : return $_COOKIE   ;
+        case 'session'  : return $_SESSION  ;
+        case 'request'  : return $_REQUEST  ;
+        case 'env'      : return $_ENV      ;
+    }
 }
 
 //----------------------------------------------------------------------------//
@@ -488,18 +533,6 @@ function driver_call($module, $fn, array $args = array())
 //----------------------------------------------------------------------------//
 
 /**
- * Get the path to a plugin config file
- *
- * @private
- *
- * @return string
- */
-function conf_file($plugin)
-{
-    return stream_resolve_include_path('config/' . $plugin . '.php');
-}
-
-/**
  * Force a config setting in code. For testing purposes only.
  *
  * @param string $name the config option name
@@ -528,88 +561,156 @@ function force_conf_clear()
     $forced = array();
 }
 
-function load_conf($plugin)
+
+/**
+ * Get the path to a plugin config file
+ *
+ * @private
+ *
+ * @return string
+ */
+function conf_file($plugin)
+{
+    return stream_resolve_include_path('config/' . $plugin . '.php');
+}
+
+
+/**
+ * Load and parse a configuration file
+ *
+ * @private
+ *
+ * @param string $plugin the plugin to load for
+ *
+ * @return array the configuration
+ */
+function conf_load($plugin)
 {
     static $configs = array();
 
     if (!isset($configs[$plugin])) {
         $conf_file = 'config/' . $plugin . '.php';
         // call user func is a pseudo sandbox
-        $configs[$plugin] = call_user_func(function () use ($conf_file) {
+        $conf = call_user_func(function () use ($conf_file) {
             require $conf_file;
             return isset($config) ? $config : null;
         });
-        if (!is_array($configs[$plugin])) {
+        if (!is_array($conf)) {
             err('$config array was not declared in ' . $conf_file);            
         }
+        if ($plugin != '_framework') {
+            $conf = array_merge(conf_load('_framework'), $conf);
+        }
+        $configs[$plugin] = $conf;
     }
 
-    return $configs[$plugin];
+    return array_merge($configs[$plugin], force_conf());
 }
 
 /**
- * Get a config option from the plugin config file.  Throw an error if it is not
- * of the correct type.
+ * If there was an error in the config file
  *
  * @private
  *
- * @param string $plugin the plugin name
- * @param string $name the configuration name
- * @param string $default the expected a default variable, used to calculate
- *        expected type
- * @param bool $raise_errors also throw an error if the config option is unset
- *        instead of using the default value
- * @return mixed the config option value
+ * @param string $plugin
+ * @param string $name
+ * @param string $msg
+ *
+ * @return void
  */
-function conf($plugin, $name, $default, $raise_errors)
+function conf_err($plugin, $name, $error)
 {
-    $err = function ($error) use ($plugin, $name, $raise_errors) {
-        if ($raise_errors) {
-            $msg = 'Error in /config/%s.php::$config["%s"]: %s';
-            err(sprintf($msg, $plugin, $name, $error));
-        }
-    };
-
-    $config = array_merge(load_conf($plugin), force_conf());
-
-    $type = gettype($default);
-    if (isset($config[$name])) {
-        $value = $config[$name];
-    } else {
-        $err('Offset is not defined');
-        $value = $default;
-    }
-
-    $d_type = gettype($default);
-    $v_type = gettype($value);
-    if ($d_type != $v_type) {
-        $err(sprintf('Expected type %s, got type %s', $d_type, $v_type));
-    }
-    return $value;
+    $msg = 'Error in /config/%s.php::$config["%s"]: %s';
+    err(sprintf($msg, $plugin, $name, $error));
 }
 
 /**
- * Get a framework configuration setting.
+ * Check if a loaded configuration setting is of the right type.
  *
- * @param string $name @see conf()
- * @param string $default @see conf()
+ * @private
+ *
+ * @param string $plugin
+ * @param string $name
+ * @param mixed $value the loaded setting
+ * @param mixed $default the default setting
+ */
+function conf_check_type($plugin, $name, $value, $default)
+{
+    $d_type = gettype($default);
+    $v_type = gettype($value);
+    if ($d_type != $v_type) {
+        $msg = sprintf('Expected type %s, got type %s', $d_type, $v_type);
+        conf_err($plugin, $name, $msg);
+    }
+}
+
+/**
+ * Configuration settings are settings which must be set in the configuration
+ * file. This method will raise an error if a requested setting is not present.
+ *
+ * @private
+ *
+ * @param string $plugin the plugin to load for, or _framework
+ * @param string $name the option name
+ * @param string $default the default value, used for type checking only
+ *
+ * @return mixed the config option value
+ */
+function conf_config($plugin, $name, $default)
+{
+    $config = conf_load($plugin);
+    if (!isset($config[$name])) {
+        conf_err($plugin, $name, 'Offset not set or NULL');
+    }
+    conf_check_type($plugin, $name, $config[$name], $default);
+    return $config[$name];
+}
+
+/**
+ * Configuration options are options which may be set to override the hard-coded
+ * default, but are not required to.
+ *
+ * @param string $plugin the plugin to load for, or _framework
+ * @param string $name the option name
+ * @param string $default the default value, the setting must have the same type.
+ *
+ * @return mixed the config option value
+ */
+function conf_option($plugin, $name, $default)
+{
+    $config = conf_load($plugin);
+    $value = isset($config[$name]) ? $config[$name] : $default;
+    conf_check_type($plugin, $name, $value, $default);
+    return $value;
+}
+
+
+
+/**
+ * Get a framework configuration setting. 
+ *
+ * @param string $name @see conf_config()
+ * @param string $default @see conf_config()
+ *
  * @return mixed the config option value
  */
 function framework_config($name, $default)
 {
-    return conf('_framework', $name, $default, true);
+    return conf_config('_framework', $name, $default);
 }
 
 
 /**
- * Get a framework config option with loose checking
- * @param string $name @see conf()
- * @param string $default @see conf()
+ * Get a framework config option.
+ *
+ * @param string $name @see conf_option()
+ * @param string $default @see conf_option()
+ *
  * @return mixed the config option value
  */
 function framework_option($name, $default)
 {
-    return conf('_framework', $name, $default, false);
+    return conf_option('_framework', $name, $default);
 }
 
 
@@ -700,26 +801,29 @@ function plugins()
 }
 
 /**
- * Get a config option with strict checking.
+ * Get a plugin config settings
  *
- * @param string $name @see conf()
- * @param string $default @see conf()
+ * @param string $name @see conf_config()
+ * @param string $default @see conf_config()
+ *
  * @return mixed the config option value
  */
 function config($name, $default)
 {
-    return conf(plugin(), $name, $default, true);
+    return conf_config(plugin(), $name, $default);
 }
 
 /**
- * Get a config option with loose checking
- * @param string $name @see conf()
- * @param string $default @see conf()
+ * Get a plugin config option, or default if not set
+ *
+ * @param string $name @see conf_plugin()
+ * @param string $default @see conf_plugin()
+ *
  * @return mixed the config option value
  */
 function option($name, $default)
 {
-    return conf(plugin(), $name, $default, false);
+    return conf_option(plugin(), $name, $default);
 }
 
 
@@ -729,44 +833,6 @@ function option($name, $default)
 //-- Error/Debugging functions                                              --//
 //----------------------------------------------------------------------------//
 
-/**
- * Fetch one of the superglobals ($_SERVER, $_REQUEST, $_GET, $_POST). Exists to
- * allow overriding for testing. 
- *
- * @param string $name one of superglobal namse, lowercase with leading
- * underscore removed.
- * @param mixed $override set to an array to override the existing superglobal,
- * or anything else but NULL to restore the default superglobal.
- *
- * @return array the superglobal, returned by reference
- */
-function &superglobal($name, $override = null)
-{
-    static $overrides = array();
-    if (is_array($override)) {
-        $overrides[$name] = $override;
-    } elseif (!is_null($override)) {
-        if (isset($overrides[$name])) {
-            unset($overrides[$name]);
-        }
-    }
-    if (isset($overrides[$name])) {
-        return $overrides[$name];
-    }
-
-    // Note: can't use variable variables for superglobals
-    switch ($name) {
-        case 'global'   : return $GLOBALS   ;
-        case 'server'   : return $_SERVER   ;
-        case 'get'      : return $_GET      ;
-        case 'post'     : return $_POST     ;
-        case 'files'    : return $_FILES    ;
-        case 'cookie'   : return $_COOKIE   ;
-        case 'session'  : return $_SESSION  ;
-        case 'request'  : return $_REQUEST  ;
-        case 'env'      : return $_ENV      ;
-    }
-}
 
 
 /**
