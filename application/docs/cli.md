@@ -2,7 +2,7 @@
 
 **Read First:** [Application Overview](./overview.md)
 
-**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
+**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples) | [Example CLI command](https://github.com/EurActiv/VSAC-Examples/tree/master/examples/cli/example.php)
 
 **Important:** All PHP files should be in the `VSAC` namespace.
 
@@ -37,6 +37,20 @@ Then, when you run the command line controller, you'll see your command in the m
     ---------------------------------------------------------------------------
 
     user@machine:/path/to/application $
+
+Alternatively, you can skip the menu by passing your command as the first parameter on the command line:
+
+    user@machine:/path/to/application $ php cli.php my-command
+
+    ###########################################################################
+    ## VSAM CLI Console                                                      ##
+    ###########################################################################
+
+    ---------------------------------------------------------------------------
+    -- Hello World!                                                          --
+    ---------------------------------------------------------------------------
+
+
 
 For a complete list of functions available in the CLI interface, see the [cli module](../modules/inc-cli.php).
 

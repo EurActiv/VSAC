@@ -2,7 +2,7 @@
 
 **Read First:** [Application Overview](./overview.md)
 
-**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
+**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples) | [Example Plugin Configuration](https://github.com/EurActiv/VSAC-Examples/blob/master/examples/config/example-plugin.php) | [Default Configurations](../config) | [Installation](./installation.md) | [Server Configuration](./server-config.md)
 
 
 Application and plugin configuration is stored in flat PHP files located in the `config` directory of your application.  Loading configuration files obeys the include logic of the rest of the application; that is, the configuration file in the _last_ included extension are the ones that are used. Configuration files do not inherit from previous files in the include chain.

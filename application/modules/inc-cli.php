@@ -228,6 +228,8 @@ function cli_ask_select($question, array $options, $default = null)
  */
 function cli_dispatch()
 {
+    global $argv;
+
     cli_title('VSAM CLI Console', '#');
     $options = scan_include_dirs('cli');
     $options = array_filter(array_map(function ($f) {
@@ -239,6 +241,11 @@ function cli_dispatch()
         }
         return pathinfo($f, PATHINFO_FILENAME);
     }, $options));
-    $command = cli_ask_select('Available commands', $options);
+
+    if (!empty($argv[1]) && in_array($argv[1], $options)) {
+        $command = $argv[1];
+    } else {
+        $command = cli_ask_select('Available commands', $options);
+    }
     require_once 'cli/' . $command . '.php';
 }

@@ -1,6 +1,6 @@
 #Versioned assets
 
-**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
+**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples) | [Example Versioning Controller](https://github.com/EurActiv/VSAC-Examples/blob/master/examples/plugins/example-plugin/example-controller-versioning.php)
 
 One of the big use-cases for this application is serving versioned assets.
 

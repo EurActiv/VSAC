@@ -1,6 +1,6 @@
 #Application Overview
 
-**See also:** [Plugins](./plugins.md) | [Modules](./modules.md) | [CLI commands](./cli.md) | [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
+**See also:** [Plugins](./plugins.md) | [Modules](./modules.md) | [CLI commands](./cli.md) | [Configuration](./configuration.md) | [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
 
 ###Structure
 

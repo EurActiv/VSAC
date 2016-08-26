@@ -2,7 +2,7 @@
 
 **Read First:** [Application Overview](./overview.md)
 
-**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples)
+**See Also:** [Examples Extension](https://github.com/EurActiv/VSAC-Examples) | [Example Module](https://github.com/EurActiv/VSAC-Examples/tree/master/examples/modules)
 
 **Important:** All PHP files should be in the `VSAC` namespace.
 
