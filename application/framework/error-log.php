@@ -29,7 +29,7 @@ $format_args = function ($args) {
 // format a backtrace array for display
 $format_trace = function ($trace) use ($format_args) {
     $return = array();
-    $default = array('function', 'line', 'class', 'type', 'args');
+    $default = array('function', 'file', 'line', 'class', 'type', 'args');
     $default = array_fill_keys($default, '');
     foreach ($trace as $t) {
         $t = array_merge($default, $t);

@@ -84,12 +84,12 @@ function cdn_get_file($filename)
     if (!($domain = cdn_get_domain($filename))) {
         return false;
     }
-    http_get($domain.$filename, $body, $error);
+    $response = http_get($domain.$filename);
 
-    if ($body === false || $error) {
+    if (!$response['body'] || $response['error']) {
         return false;
     }
-    file_put_contents($abspath, $body);
+    file_put_contents($abspath, $response['body']);
     return $abspath;
 }
 

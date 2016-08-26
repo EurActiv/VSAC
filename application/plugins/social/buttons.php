@@ -17,7 +17,11 @@ function social_get_share_url($service, $url, $title)
 {
 
     $links = array();
-    $url = shortener_shorten($url);
+    $surl = shortener_shorten($url);
+    if ($surl != $url) {
+        $url = $surl;
+        callmap_log($url);
+    }
 
     switch ($service) {
         case 'facebook':
@@ -69,18 +73,20 @@ function social_get_share_count($service, $url)
     switch ($service) {
         case 'linkedin':
             $base = 'https://www.linkedin.com/countserv/count/share';
+            callmap_log($base);
             $query = array('url' =>  $url, 'format' => 'json');
             $get = $base . '?' . http_build_query($query);
-            http_get($get, $body);
-            $body = json_decode($body, true);
+            $response = http_get($get);
+            $body = json_decode($response['body'], true);
             return empty($body['count']) ? 0 : (int) $body['count'];
         case 'gplus':
             $base = 'https://plusone.google.com/_/+1/fastbutton';
+            callmap_log($base);
             $query = array('url' => $url);
             $get = $base . '?' . http_build_query($query);
-            http_get($get, $body);
+            $response = http_get($get);
             $regex = '/id="aggregateCount"[^>]*>([^<]+)</';
-            if (preg_match($regex, $body, $matches)) {
+            if (preg_match($regex, $response['body'], $matches)) {
                 $count = strtolower($matches[1]);
                 $count = str_replace(['k', 'm'], ['000', '000000'], $count);
                 $count = preg_replace('/[^\d]/', '', $count);

@@ -12,6 +12,9 @@ $config = array(
     'http_allowed_urls' => array(),
 
     'api_key' => 'keyboard_cat',
+
+    'callmap_driver' => 'sqlitecallmap',
+
     'full_content_feeds' => array(
         array(
             'handle' => 'voa-news',

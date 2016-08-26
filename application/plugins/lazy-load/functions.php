@@ -239,14 +239,22 @@ function lazy_load_scale($url, $aspect, $width, $strategy, &$error = '')
     return cal_get_permutation(
         $url,
         function () use ($url) {
-            if (http_get($url, $body)) {
-                return $body;
+            $response = http_get($url);
+            if ($response['body'] && !$response['error']) {
+                return $response['body'];
             }
             return null;
         },
         implode('x', $aspect) . '.' . $width . '.' . $strategy,
         function ($original) use ($url, $aspect, $width, $strategy) {
-            $blob = image_scale_blob($original, $aspect, $width, $strategy);
+            if (!$original) {
+                return null;
+            }
+            try {
+                $blob = image_scale_blob($original, $aspect, $width, $strategy);
+            } catch (\Exception $e) {
+                return null;
+            }
             return $blob;
         }
     );

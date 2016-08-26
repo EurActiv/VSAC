@@ -14,6 +14,7 @@ if (!$abspath || strpos($abspath, $files_path) !== 0) {
     response_send_error();
 }
 
+callmap_log(basename($abspath));
 response_send_file($abspath);
 
 

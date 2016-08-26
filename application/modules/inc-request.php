@@ -81,7 +81,7 @@ function request_query($name, $default = null)
  */
 function request_query_all()
 {
-    return request_superglobal_all('get');
+    return superglobal('get');
 }
 
 /**
@@ -104,7 +104,7 @@ function request_post($name, $default = null)
  */
 function request_post_all()
 {
-    return request_superglobal_all('post');
+    return superglobal('post');
 }
 
 /**
@@ -128,7 +128,21 @@ function request_request($name, $default = null)
  */
 function request_request_all()
 {
-    return request_superglobal_all('request');
+    return superglobal('request');
+}
+
+/**
+ * Get a request header
+ *
+ * @param string $header the header name, case-insensitive
+ * @param string $default value to return if header is not set
+ *
+ * @return string the header value, or the default
+ */
+function request_header($name, $default = null)
+{
+    $name = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
+    return request_superglobal('server', $name, $default);
 }
 
 

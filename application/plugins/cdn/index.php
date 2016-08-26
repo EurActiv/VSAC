@@ -17,6 +17,7 @@ if ($abspath = cdn_get_file($path)) {
     if ($minify) {
         $abspath = cdn_minify($path, $abspath);
     }
+    callmap_log(cdn_get_domain($path));
     response_send_file($abspath);
 }
 response_send_error();

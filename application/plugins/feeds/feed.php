@@ -20,10 +20,11 @@ $strip_tags = (bool) request_query('strip_tags', true);
 $content = cal_get_permutation(
     $feed,
     function () use ($feed) {
-        if(!http_get($feed, $body, $e, 1)) {
+        $response = http_get($feed, true);
+        if (!$response['body'] || $response['error']) {
             return null;
         }
-        if (!($xml = @simplexml_load_string($body, null, LIBXML_NOCDATA))) {
+        if (!($xml = @simplexml_load_string($response['body'], null, LIBXML_NOCDATA))) {
             return null;
         }
         if (!$xml->channel || !$xml->channel->item) {
@@ -65,6 +66,7 @@ $content = cal_get_permutation(
 if (!$content) {
     response_send_json(array('error' => 'unknown error'));
 }
+callmap_log($feed);
 response_send_json($content, 60 * 60 * 24 * 31);
 
 

@@ -15,6 +15,7 @@ $config = array(
     ),
 
     'error_driver' => 'sqliteerror',
+    'callmap_driver' => 'sqlitecallmap',
 
     // testing
     'bitly_shortener_base_url'     =>  'j.mp',

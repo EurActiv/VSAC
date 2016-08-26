@@ -22,9 +22,11 @@ function feeds_full_content_info($handle)
 
 function feeds_full_content_fetch_item($url, $feed)
 {
-    if(!http_get($url, $body, $e, true, $feed['item_curl_options'])) {
+    $response = http_get($url, true, $feed['item_curl_options']);
+    if (!$response['body'] || $response['error']) {
         return false;
     }
+    extract($response);
     $body = htmlspecialchars_decode(@htmlentities($body, ENT_COMPAT|ENT_HTML401, mb_detect_encoding($body)));
     $tidy = tidy_parse_string($body, array(
         'clean'       => 'yes',
@@ -63,10 +65,11 @@ if (!($info = feeds_full_content_info($feed))) {
 }
 
 $content = cal_get_item($feed, function () use ($info) {
-
-    if(!http_get($info['url'], $body, $e, false, $info['feed_curl_options'])) {
+    $response = http_get($info['url'], false, $info['feed_curl_options']);
+    if(!$response['body'] || $response['error']) {
         return null;
     }
+    extract($response);
 
     if (!($xml = @simplexml_load_string($body, null, LIBXML_NOCDATA))) {
         return null;
@@ -81,6 +84,7 @@ $content = cal_get_item($feed, function () use ($info) {
     return $xml->asXml();
 });
 
+callmap_log($feed);
 response_send($content, array('Content-Type' => 'text/xml; charset=utf-8'));
 
 

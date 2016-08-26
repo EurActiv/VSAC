@@ -29,10 +29,12 @@ function bitly_shorten($url)
         'format'       => 'json',
     ));
     $api_url = 'https://api-ssl.bitly.com/v3/shorten?' . $api_query; 
-    if (!http_get($api_url, $json)) {
+
+    $response = http_get($api_url);
+    if (!$response['body'] || $response['error']) {
         return $url;
     }
-    $arr = json_decode($json, true);
+    $arr = json_decode($response['body'], true);
     if (empty($arr['data']) || $arr['data']['long_url'] != $url || !$arr['data']['url']) {
         return $url;
     }

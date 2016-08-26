@@ -68,13 +68,13 @@ function build_test()
 function build_minified_path($abspath, $ext)
 {
     if (!file_exists($abspath)) {
-        err('Source file does not exist: '.$abspath, __FILE__.__LINE__);
+        err('Source file does not exist: '.$abspath);
     }
     if (pathinfo($abspath, PATHINFO_EXTENSION) !== $ext) {
-        err('Source file is not '.$ext.': '.$abspath, __FILE__.__LINE__);
+        err('Source file is not '.$ext.': '.$abspath);
     }
     if (preg_match('/-min.'.preg_quote($ext, '/').'$/', $abspath)) {
-        err('Source file already has minified file name: '.$abspath, __FILE__.__LINE__);
+        err('Source file already has minified file name: '.$abspath);
     }
     return substr($abspath, 0, -1 * (strlen($ext) + 1)).'-min.'.$ext; 
 }
@@ -111,10 +111,9 @@ function build_minify_css($abspath, $base_url = false)
     }
     $dir = dirname($abspath).'/';
 
-    $tempdir = $dir.'minify_css_temp/';
+    $tempdir = $dir . 'minify_css_temp_' . uniqid() . '/';
     $tempfile = $tempdir.basename($abspath);
-    
-    @mkdir($tempdir);
+    mkdir($tempdir);
     copy($abspath, substr($tempfile, 0, -3).'scss');
     build_compile_sass($tempdir, $base_url);
     copy(build_minified_path($tempfile, 'css'), $target);
@@ -181,7 +180,8 @@ function build_sass_exec($dirname, $compressed, $base_url = false)
     $config = str_replace('#url#', $base_url . '/' , $config);
     file_put_contents("{$dirname}config.rb", $config);
     exec("compass compile $dirname");
-    unlink("{$dirname}config.rb");
-
+    if (file_exists("{$dirname}config.rb")) {
+        unlink("{$dirname}config.rb");
+    }
 }
 

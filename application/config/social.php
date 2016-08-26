@@ -14,6 +14,8 @@ $config = array(
     'shortener_base_url' =>  '',
     'shortener_api_key'  =>  '', 
 
+    'callmap_driver'     => 'sqlitecallmap',
+
     'http_allowed_domains' => array(
         'example.com',
         $_SERVER['SERVER_NAME'],

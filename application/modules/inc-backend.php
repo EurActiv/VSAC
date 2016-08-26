@@ -393,12 +393,6 @@ function backend_codelink($url, $text = false)
 
 function backend_main_menu()
 {
-    $get_link_text = function ($filename) {
-        $text = substr($filename, 0, -4);
-        $text = preg_replace('/[^a-z]/i', ' ', $text);
-        $text = ucwords($text);
-        return $text;
-    };
 
     $links = scan_include_dirs('/framework');
     $links = array_filter($links, function ($link) {
@@ -406,24 +400,26 @@ function backend_main_menu()
             && $link !== 'index.php'
             && $link !== 'login.php';
     });
-    ?><div class="dropdown">
-        <button
-            class="btn btn-info dropdown-toggle"
-            type="button"
-            data-toggle="dropdown"
-        ><i class="fa fa-lg fa-gear"></i></button>
-        <ul class="dropdown-menu dropdown-menu-right"><?php
-            $li = '<li><a href="%s">%s</a></li>';
-            printf($li, router_base_url(), 'Directory');
-            if (fn_exists('auth_login_btn')) {
+    ?><ul class="nav nav-pills">
+        <li><a href="<?= router_base_url() ?>">Home</a></li>
+        <?php if (fn_exists('auth_login_btn')) {
                 echo '<li>', auth_login_btn(' '), '</li>';
-            }
-            echo '<li role="separator" class="divider"></li>';
-            foreach ($links as $link) {
-                printf($li, router_url($link), $get_link_text($link));
-            }
-        ?></ul>
-    </div><?php
+        } ?>
+        <li class="dropdown">
+            <a class="dropdown-toggle btn-info" data-toggle="dropdown" href="#">
+                <i class="fa fa-lg fa-gear"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right"><?php
+                foreach ($links as $link) {
+                    printf(
+                        '<li><a href="%s">%s</a></li>',
+                        router_url($link),
+                        ucwords(preg_replace('/[^a-z]/i', ' ', substr($link, 0, -4)))
+                    );
+                }
+            ?></ul>
+        </li>
+    </ul><?php
 
 }
 

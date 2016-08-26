@@ -43,19 +43,21 @@ function http_sysconfig()
 function http_test()
 {
     $url = 'https://httpbin.org/get?hello=world';
-    if (!http_get($url, $body)) {
+    $response = http_get($url);
+    if (!$response['body'] || $response['error']) {
         return 'Could not make a GET request';
     }
-    $json = json_decode($body, true);
+    $json = json_decode($response['body'], true);
     if ($json['args']['hello'] != 'world') {
         return 'Query parameters were not passed';
     }
     $url = 'https://httpbin.org/post';
     $data = array('hello' => 'world');
-    if (!http_post($url, $data, false, $body)) {
+    $response = http_post($url, $data);
+    if (!$response['body'] || $response['error']) {
         return 'Could not make a POST request';
     }
-    $json = json_decode($body, true);
+    $json = json_decode($response['body'], true);
     if ($json['form']['hello'] != 'world') {
         return 'Post data was not passed';
     }
@@ -128,25 +130,13 @@ function http_uri_is_authorized($url, &$error = '')
  * Use cURL to fetch a foreign asset.
  *
  * @param string $url the url to the asset
- * @param string $body the body of the request will be stored here
- * @param string $error any curl errors will be stored here
- * @return bool true on success, false on failure
+ * 
+ * @return see http_exec_curl()
  */
-function http_get($url, &$body = '', &$error = '', $googlebot = false, $options = array())
+function http_get($url, $googlebot = false, $options = array())
 {
-    $error = '';
-    $body = '';
-
     $ch = http_get_curl_handle($url, $googlebot, $options);
-
-    $body = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($body === false || $status > 399) {
-        $error = $status . ': '  . curl_error($ch);
-        return false;
-    }
-
-    return true;
+    return http_exec_curl($ch);
 }
 
 
@@ -157,27 +147,18 @@ function http_get($url, &$body = '', &$error = '', $googlebot = false, $options 
  * @param mixed $data the post data
  * @param bool $multipart sent as multipart data. Only use this if you're really
  * sending binary data as nested array data might be messed up otherwise.
- * @param string $body the body of the request will be stored here
- * @param string $error any curl errors will be stored here
- * @return bool true on success, false on failure
+ * 
+ * @return see http_exec_curl()
  */
-function http_post($url, $data, $multipart, &$body = '', &$error = '')
+function http_post($url, $data, $multipart = false)
 {
-    $error = $body = '';
 
     $ch = http_get_curl_handle($url);
     curl_setopt($ch, CURLOPT_POST, 1);
 
     curl_setopt($ch, CURLOPT_POSTFIELDS, $multipart ? $data : http_build_query($data));
 
-    $body = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($body === false || $status > 399) {
-        $error = $status . ': '  . curl_error($ch);
-        return false;
-    }
-
-    return true;
+    return http_exec_curl($ch);
 }
 
 /**
@@ -235,31 +216,38 @@ function http_examples_in_config($domains = array(), $urls = array())
  *
  * @return curl resource
  */
-function http_get_curl_handle($url, $googlebot = false, $options = array())
+function http_get_curl_handle($url, $googlebot = false, array $options = array())
 {
     $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     // limit time messing around with transfer
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    $_options = array(
+        // limit connection time
+        CURLOPT_CONNECTTIMEOUT      => 15,
+        CURLOPT_TIMEOUT             => 15,
+        // limit size of transfer to 32MB
+        // see http://stackoverflow.com/a/17642638/1459873
+        CURLOPT_BUFFERSIZE          => 128,
+        CURLOPT_NOPROGRESS          => false,
+        CURLOPT_PROGRESSFUNCTION    => function ($ds, $dl, $us, $ul) {
+                                           return ($dl > (32 * 1024 * 1024)) ? 1 : 0;
+                                       },
+        // prevent curl from using local http cache
+        // see http://stackoverflow.com/a/15493829
+        CURLOPT_FRESH_CONNECT       => TRUE,
+        CURLOPT_HTTPHEADER          => array('Cache-Control: no-cache'),
+        // allow forwarding
+        CURLOPT_FOLLOWLOCATION      => true,
+    );
 
-    // limit size of transfer to 32MB
-    // see http://stackoverflow.com/a/17642638/1459873
-    curl_setopt($ch, CURLOPT_BUFFERSIZE, 128);
-    curl_setopt($ch, CURLOPT_NOPROGRESS, false);
-    curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function ($ds, $dl, $us, $ul) {
-        return ($dl > (32 * 1024 * 1024)) ? 1 : 0;
-    });
+    if (fn_exists('request_header') && fn_exists('request_url')) {
+        $_options[CURLOPT_REFERER] = request_header('referer', request_url());
+    }
+    foreach ($_options as $key => $value) {
+        if (!isset($options[$key])) {
+            curl_setopt($ch, $key, $value);
+        }
+    }
 
-    // prevent curl from using local http cache
-    // see http://stackoverflow.com/a/15493829
-    curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array( 
-        'Cache-Control: no-cache', 
-    ));
-
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    
     foreach($options as $key => $value) {
         curl_setopt($ch, $key, $value);
     }
@@ -275,3 +263,37 @@ function http_get_curl_handle($url, $googlebot = false, $options = array())
     return $ch;
 }
 
+/**
+ * Execute the curl handle generated by http_get_curl_handle() after any
+ * intermediate magic has been done
+ *
+ * @param resource $ch the curl handle
+ * @return array with keys 'status' ([int] the http status code), 'headers'
+ * ([array] the http response headers), 'body' ([string] the response body)
+ * and 'error' (['string'] any error message associated with the response)
+ */
+function http_exec_curl($ch)
+{
+    $status = 0;
+    $headers = array();
+    $body = '';
+    $error = '';
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($_ch, $line) use (&$headers) {
+        $len = strlen($line);
+        if (strpos($line, ':') !== false) {
+            $line = array_map('trim', explode(':', $line, 2));
+            $headers[$line[0]] = $line[1];
+        }
+	return $len;
+    });
+    $body = curl_exec($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($body === false || $status > 399) {
+        $error = $status . ': '  . curl_error($ch);
+        trigger_error($error . ' (' . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . ')');
+    }
+    $body = (string) $body;
+    return compact('status', 'headers', 'body', 'error');
+}

@@ -38,6 +38,7 @@ if (!($key = request_query('key'))) {
 if (social_validate_key($key, $url)) {
     $shares = request_query('shares');
     if (preg_match('/^\d+$/', $shares)) {
+        callmap_log('facebook.com');
         kval_set($url, (int) $shares);
         response_send_json(array('shares' => (int) $shares));
     } else {

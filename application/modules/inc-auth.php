@@ -192,7 +192,7 @@ function auth_check_csrf_token()
 {
     $token = auth_get_csrf_token();
     if (request_post('_token', '') !== $token) {
-        err('CSRF token mismatch.', __FILE__.__LINE__);
+        err('CSRF token mismatch.');
     }
 }
 

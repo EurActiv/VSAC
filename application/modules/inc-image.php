@@ -191,7 +191,7 @@ function image_hex_color($color)
         $c = '#'.$c;
     }
     if (!preg_match('/^#([A-F0-9]{3}){1,2}$/', $c)) {
-        err('invalid hex color '.$color, __FILE__.__LINE__);
+        err('invalid hex color '.$color);
     }
     return $c;
 

@@ -144,7 +144,7 @@ function sqlitecache_get_connection()
         $create = !file_exists($path) || !filesize($path);
         $connection = new \PDO('sqlite:'.$path);
         $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
+        $connection->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
         if ($create) {
             sqlitecache_create_cache($connection);
         }

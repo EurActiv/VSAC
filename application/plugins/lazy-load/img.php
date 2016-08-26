@@ -16,6 +16,8 @@ $image = lazy_load_scale(
     $parameters['strategy']
 );
 
+callmap_log($parameters['image']);
+
 response_send(
     $image,
     array('Content-Type' => 'image/jpeg')

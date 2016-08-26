@@ -37,4 +37,5 @@ $config = array(
     'api_key' => 'keyboard_cat',
     'http_allowed_domains' => array(),
     'http_allowed_urls' => array(),
+    'callmap_driver' => 'sqlitecallmap',
 );

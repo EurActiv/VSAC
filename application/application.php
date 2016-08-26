@@ -21,7 +21,7 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 set_exception_handler(function ($ex) {
     use_module('error');
     error_handle_error(
-        $$ex->getCode(),
+        $ex->getCode(),
         $ex->getMessage(),
         $ex->getFile(),
         $ex->getLine(),
@@ -53,6 +53,7 @@ function bootstrap_web($debug = false)
     use_module('request');
     use_module('response');
     use_module('front-controller');
+    use_module('callmap');
 }
 
 /**
@@ -652,7 +653,7 @@ function plugin()
 {
     $plugin =  @constant('VSAC_PLUGIN');
     if (!$plugin) {
-        err('No plugin bootsrapped', __FILE__.__LINE__);
+        err('No plugin bootsrapped');
     }
     return $plugin;
 }
@@ -779,23 +780,14 @@ function deprecated($function, $replaced_with)
 }
 
 /**
- * Print an error message and die.
+ * Log a fatal user error, shorthand for trigger_error($msg, E_USER_ERROR).
+ *
  * @param string $msg the error description
- * @param string $src where the error occured, something like __FILE__.__LINE__
- *        the path to this directory will be stripped to avoid exposing too much
- *        to the outside.
  */
-function err($msg, $src = '')
+function err($msg)
 {
-    $sanitize = function ($str) {
-        foreach (get_include_paths() as $offset => $path) {
-            $str = str_replace($path, "include_path[$offset]", $str);
-        }
-        return htmlspecialchars($str);
-    };
-    
-    printf('<br><b>Error</b> in %s: %s', $src, $msg);
-    die();
+    trigger_error($msg, E_USER_ERROR);
+    die(); // should be dead code, but in case the error handler has a mistake
 }
 
 /**

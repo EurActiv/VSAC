@@ -42,11 +42,22 @@ function sqliteerror_log($errno, $errstr, $errfile, $errline, $trace)
         sqliteerror_touch($err_key);
         return;
     }
+
     $errlog_obj = compact('errno', 'errstr', 'errfile', 'errline', 'trace');
+    try {
+        $errlog_obj = serialize($errlog_obj);
+    } catch (\Exception $e) {
+        $errlog_obj['trace'] = array_map(function ($line) {
+            $line['args'] = false;
+            return $line;
+        }, $errlog_obj['trace']); 
+        $errlog_obj = serialize($errlog_obj);
+    }
+
     sqliteerror_query(
         "INSERT OR REPLACE INTO errlog (id, errlog_key, errlog_obj)
          VALUES ((SELECT id FROM errlog WHERE errlog_key = ?), ?, ?)",
-        array($err_key, $err_key, serialize($errlog_obj))
+        array($err_key, $err_key, $errlog_obj)
     );
     sqliteerror_touch($err_key);
 }
@@ -109,6 +120,7 @@ function sqliteerror_get_connection()
         $create = !file_exists($path) || !filesize($path);
         $connection = new \PDO('sqlite:'.$path);
         $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $connection->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
         if ($create) {
             sqliteerror_create($connection);
         }

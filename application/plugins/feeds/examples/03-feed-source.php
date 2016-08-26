@@ -8,7 +8,8 @@ $url = router_add_query(router_plugin_url('feed.php', true), array(
     'fields' => 'link,title,comments',
 ));
 
-http_get($url, $results);
+
+$results = http_get($url);
 
 ?><pre><code>$ curl <?= $url ?>;
-<?= htmlspecialchars($results); ?></code></pre>
+<?= htmlspecialchars($results['body']); ?></code></pre>

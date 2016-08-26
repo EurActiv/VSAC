@@ -197,10 +197,7 @@ function filesystem_files_rmdir($dir, $tested = false)
     }
     $fpath = filesystem_files_path();
     if (strpos($dir, $fpath) !== 0) {
-        err(
-            "Error removing directory: '{$dir}' is not in allowed path '{$fpath}'",
-            __FILE__ . ':' . __LINE__
-        );
+        err("Error removing directory: '{$dir}' is not in allowed path '{$fpath}'");
     }
     return filesystem_rmdir($dir, $tested ? "I've really tested this" : false);
 }
@@ -274,7 +271,7 @@ function filesystem_cpdir($src_abspath, $dest_abspath, $merge = false, $overwrit
 {
     $src = realpath($src_abspath);
     if (!$src) {
-        err('directory does not exist: '.$src_abspath, __FILE__.__LINE__);
+        err('directory does not exist: '.$src_abspath);
     }
     $src .= '/';
     if (substr($dest_abspath, -1) != '/') {
@@ -282,7 +279,7 @@ function filesystem_cpdir($src_abspath, $dest_abspath, $merge = false, $overwrit
     }
     if (realpath($dest_abspath)) {
         if (!$merge) {
-            err('directory already exists: '.$dest_abspath, __FILE__.__LINE__);
+            err('directory already exists: '.$dest_abspath);
         }
     } else {
         mkdir($dest_abspath);
