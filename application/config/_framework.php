@@ -26,7 +26,7 @@ $config = array(
     // default configuration of http module
     'http_allowed_urls'   => array(),
     'http_allowed_domains'   => array(
-        $_SERVER['SERVER_NAME'],
+        empty($_SERVER['SERVER_NAME']) ? 'localhost' : $_SERVER['SERVER_NAME'],
         'httpbin.org',
         'example.com',
     ),
