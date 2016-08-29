@@ -1,0 +1,478 @@
+/* line 2, vgmh-social.scss */
+[class*="vgmh-social-"] {
+  position: relative;
+  padding-left: 30px;
+  text-align: right;
+  min-height: 30px;
+}
+/* line 7, vgmh-social.scss */
+[class*="vgmh-social-"] i {
+  position: absolute;
+  left: 10px;
+  height: inherit;
+  line-height: inherit;
+}
+/* line 13, vgmh-social.scss */
+[class*="vgmh-social-"] span {
+  min-width: 100px;
+  padding-left: 10px;
+}
+/* line 17, vgmh-social.scss */
+[class*="vgmh-social-"] b {
+  padding-left: 5px;
+}
+
+/**
+ * A snippet taken from:
+ * http://lipis.github.io/bootstrap-social/
+ */
+/* line 43, vgmh-social.scss */
+.vgmh-social-adn {
+  background-color: #d87a68;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-adn:link, .vgmh-social-adn:visited, .vgmh-social-adn:hover, .vgmh-social-adn:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-adn:hover, .vgmh-social-adn:active {
+  background-color: #c24932;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-adn:hover span, .vgmh-social-adn:active span {
+  text-decoration: underline;
+}
+
+/* line 44, vgmh-social.scss */
+.vgmh-social-bitbucket {
+  background-color: #205081;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-bitbucket:link, .vgmh-social-bitbucket:visited, .vgmh-social-bitbucket:hover, .vgmh-social-bitbucket:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-bitbucket:hover, .vgmh-social-bitbucket:active {
+  background-color: #112a44;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-bitbucket:hover span, .vgmh-social-bitbucket:active span {
+  text-decoration: underline;
+}
+
+/* line 45, vgmh-social.scss */
+.vgmh-social-dropbox {
+  background-color: #1087dd;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-dropbox:link, .vgmh-social-dropbox:visited, .vgmh-social-dropbox:hover, .vgmh-social-dropbox:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-dropbox:hover, .vgmh-social-dropbox:active {
+  background-color: #0b5b96;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-dropbox:hover span, .vgmh-social-dropbox:active span {
+  text-decoration: underline;
+}
+
+/* line 46, vgmh-social.scss */
+.vgmh-social-email {
+  background-color: #615f5d;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-email:link, .vgmh-social-email:visited, .vgmh-social-email:hover, .vgmh-social-email:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-email:hover, .vgmh-social-email:active {
+  background-color: #3a3938;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-email:hover span, .vgmh-social-email:active span {
+  text-decoration: underline;
+}
+
+/* line 47, vgmh-social.scss */
+.vgmh-social-facebook {
+  background-color: #3b5998;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-facebook:link, .vgmh-social-facebook:visited, .vgmh-social-facebook:hover, .vgmh-social-facebook:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-facebook:hover, .vgmh-social-facebook:active {
+  background-color: #263961;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-facebook:hover span, .vgmh-social-facebook:active span {
+  text-decoration: underline;
+}
+
+/* line 48, vgmh-social.scss */
+.vgmh-social-flickr {
+  background-color: #ff0084;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-flickr:link, .vgmh-social-flickr:visited, .vgmh-social-flickr:hover, .vgmh-social-flickr:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-flickr:hover, .vgmh-social-flickr:active {
+  background-color: #b3005c;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-flickr:hover span, .vgmh-social-flickr:active span {
+  text-decoration: underline;
+}
+
+/* line 49, vgmh-social.scss */
+.vgmh-social-foursquare {
+  background-color: #f94877;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-foursquare:link, .vgmh-social-foursquare:visited, .vgmh-social-foursquare:hover, .vgmh-social-foursquare:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-foursquare:hover, .vgmh-social-foursquare:active {
+  background-color: #ed0845;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-foursquare:hover span, .vgmh-social-foursquare:active span {
+  text-decoration: underline;
+}
+
+/* line 50, vgmh-social.scss */
+.vgmh-social-github {
+  background-color: #444444;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-github:link, .vgmh-social-github:visited, .vgmh-social-github:hover, .vgmh-social-github:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-github:hover, .vgmh-social-github:active {
+  background-color: #1e1e1e;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-github:hover span, .vgmh-social-github:active span {
+  text-decoration: underline;
+}
+
+/* line 51, vgmh-social.scss */
+.vgmh-social-google {
+  background-color: #dd4b39;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-google:link, .vgmh-social-google:visited, .vgmh-social-google:hover, .vgmh-social-google:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-google:hover, .vgmh-social-google:active {
+  background-color: #ac2d1e;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-google:hover span, .vgmh-social-google:active span {
+  text-decoration: underline;
+}
+
+/* line 52, vgmh-social.scss */
+.vgmh-social-instagram {
+  background-color: #3f729b;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-instagram:link, .vgmh-social-instagram:visited, .vgmh-social-instagram:hover, .vgmh-social-instagram:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-instagram:hover, .vgmh-social-instagram:active {
+  background-color: #294a65;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-instagram:hover span, .vgmh-social-instagram:active span {
+  text-decoration: underline;
+}
+
+/* line 53, vgmh-social.scss */
+.vgmh-social-linkedin {
+  background-color: #007bb6;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-linkedin:link, .vgmh-social-linkedin:visited, .vgmh-social-linkedin:hover, .vgmh-social-linkedin:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-linkedin:hover, .vgmh-social-linkedin:active {
+  background-color: #00476a;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-linkedin:hover span, .vgmh-social-linkedin:active span {
+  text-decoration: underline;
+}
+
+/* line 54, vgmh-social.scss */
+.vgmh-social-microsoft {
+  background-color: #2672ec;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-microsoft:link, .vgmh-social-microsoft:visited, .vgmh-social-microsoft:hover, .vgmh-social-microsoft:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-microsoft:hover, .vgmh-social-microsoft:active {
+  background-color: #1050b6;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-microsoft:hover span, .vgmh-social-microsoft:active span {
+  text-decoration: underline;
+}
+
+/* line 55, vgmh-social.scss */
+.vgmh-social-odnoklassniki {
+  background-color: #f4731c;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-odnoklassniki:link, .vgmh-social-odnoklassniki:visited, .vgmh-social-odnoklassniki:hover, .vgmh-social-odnoklassniki:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-odnoklassniki:hover, .vgmh-social-odnoklassniki:active {
+  background-color: #ba5109;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-odnoklassniki:hover span, .vgmh-social-odnoklassniki:active span {
+  text-decoration: underline;
+}
+
+/* line 56, vgmh-social.scss */
+.vgmh-social-openid {
+  background-color: #f7931e;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-openid:link, .vgmh-social-openid:visited, .vgmh-social-openid:hover, .vgmh-social-openid:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-openid:hover, .vgmh-social-openid:active {
+  background-color: #c26c07;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-openid:hover span, .vgmh-social-openid:active span {
+  text-decoration: underline;
+}
+
+/* line 57, vgmh-social.scss */
+.vgmh-social-pinterest {
+  background-color: #cb2027;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-pinterest:link, .vgmh-social-pinterest:visited, .vgmh-social-pinterest:hover, .vgmh-social-pinterest:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-pinterest:hover, .vgmh-social-pinterest:active {
+  background-color: #89161a;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-pinterest:hover span, .vgmh-social-pinterest:active span {
+  text-decoration: underline;
+}
+
+/* line 58, vgmh-social.scss */
+.vgmh-social-reddit {
+  background-color: #eff7ff;
+  color: #000;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-reddit:link, .vgmh-social-reddit:visited, .vgmh-social-reddit:hover, .vgmh-social-reddit:active {
+  color: #000;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-reddit:hover, .vgmh-social-reddit:active {
+  background-color: #a3d1ff;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-reddit:hover span, .vgmh-social-reddit:active span {
+  text-decoration: underline;
+}
+
+/* line 59, vgmh-social.scss */
+.vgmh-social-soundcloud {
+  background-color: #ff5500;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-soundcloud:link, .vgmh-social-soundcloud:visited, .vgmh-social-soundcloud:hover, .vgmh-social-soundcloud:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-soundcloud:hover, .vgmh-social-soundcloud:active {
+  background-color: #b33c00;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-soundcloud:hover span, .vgmh-social-soundcloud:active span {
+  text-decoration: underline;
+}
+
+/* line 60, vgmh-social.scss */
+.vgmh-social-tumblr {
+  background-color: #2c4762;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-tumblr:link, .vgmh-social-tumblr:visited, .vgmh-social-tumblr:hover, .vgmh-social-tumblr:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-tumblr:hover, .vgmh-social-tumblr:active {
+  background-color: #14212d;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-tumblr:hover span, .vgmh-social-tumblr:active span {
+  text-decoration: underline;
+}
+
+/* line 61, vgmh-social.scss */
+.vgmh-social-twitter {
+  background-color: #55acee;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-twitter:link, .vgmh-social-twitter:visited, .vgmh-social-twitter:hover, .vgmh-social-twitter:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-twitter:hover, .vgmh-social-twitter:active {
+  background-color: #1689e0;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-twitter:hover span, .vgmh-social-twitter:active span {
+  text-decoration: underline;
+}
+
+/* line 62, vgmh-social.scss */
+.vgmh-social-vimeo {
+  background-color: #1ab7ea;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-vimeo:link, .vgmh-social-vimeo:visited, .vgmh-social-vimeo:hover, .vgmh-social-vimeo:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-vimeo:hover, .vgmh-social-vimeo:active {
+  background-color: #0f83a8;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-vimeo:hover span, .vgmh-social-vimeo:active span {
+  text-decoration: underline;
+}
+
+/* line 63, vgmh-social.scss */
+.vgmh-social-vk {
+  background-color: #587ea3;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-vk:link, .vgmh-social-vk:visited, .vgmh-social-vk:hover, .vgmh-social-vk:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-vk:hover, .vgmh-social-vk:active {
+  background-color: #3d5871;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-vk:hover span, .vgmh-social-vk:active span {
+  text-decoration: underline;
+}
+
+/* line 64, vgmh-social.scss */
+.vgmh-social-yahoo {
+  background-color: #720e9e;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-yahoo:link, .vgmh-social-yahoo:visited, .vgmh-social-yahoo:hover, .vgmh-social-yahoo:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-yahoo:hover, .vgmh-social-yahoo:active {
+  background-color: #3f0858;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-yahoo:hover span, .vgmh-social-yahoo:active span {
+  text-decoration: underline;
+}
+
+/* line 65, vgmh-social.scss */
+.vgmh-social-whatsapp {
+  background-color: #36ae49;
+  color: #fff;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-whatsapp:link, .vgmh-social-whatsapp:visited, .vgmh-social-whatsapp:hover, .vgmh-social-whatsapp:active {
+  color: #fff;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-whatsapp:hover, .vgmh-social-whatsapp:active {
+  background-color: #247431;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-whatsapp:hover span, .vgmh-social-whatsapp:active span {
+  text-decoration: underline;
+}
+
+/* some additional buttons */
+/* line 68, vgmh-social.scss */
+.vgmh-social-comments {
+  background-color: #eee;
+  color: #333;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-comments:link, .vgmh-social-comments:visited, .vgmh-social-comments:hover, .vgmh-social-comments:active {
+  color: #333;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-comments:hover, .vgmh-social-comments:active {
+  background-color: #c8c8c8;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-comments:hover span, .vgmh-social-comments:active span {
+  text-decoration: underline;
+}
+
+/* line 69, vgmh-social.scss */
+.vgmh-social-print {
+  background-color: #f3f3f3;
+  color: #333;
+}
+/* line 31, vgmh-social.scss */
+.vgmh-social-print:link, .vgmh-social-print:visited, .vgmh-social-print:hover, .vgmh-social-print:active {
+  color: #333;
+}
+/* line 34, vgmh-social.scss */
+.vgmh-social-print:hover, .vgmh-social-print:active {
+  background-color: #cdcdcd;
+}
+/* line 36, vgmh-social.scss */
+.vgmh-social-print:hover span, .vgmh-social-print:active span {
+  text-decoration: underline;
+}

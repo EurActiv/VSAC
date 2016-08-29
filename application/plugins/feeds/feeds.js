@@ -7,7 +7,7 @@
     var base_url = (function () {
         var url = '';
         var calculate = function () {
-            var regex = /(.*\/)feeds(-min)?\.js(\?.*)?$/;
+            var regex = /(.*\/)feeds\/feeds(-min)?\.js(\?.*)?$/;
             $('script').each(function () {
                 if (this.src && regex.test(this.src)) {
                     url = this.src.match(regex)[1];
@@ -35,12 +35,15 @@
             data.strip_tags = strip_tags;
         }
         $.ajax({
-            url: base_url() + 'feed.php',
+            url: base_url() + 'feeds/feed.php',
             jsonp: "callback",
             dataType: "jsonp",
             data: data,
             success: callback
         });    
     }
+    // backwards compatability with an earlier naming convention
+    global.VGMH = global.VGMH || {};
+    global.VGMH.feeds = global.VSAC.feeds;
 
 }(window));

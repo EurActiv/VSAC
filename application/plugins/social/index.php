@@ -9,6 +9,30 @@ use_module('backend-all');
 if (auth_is_authenticated()) {
     build_minify_js(__DIR__.'/vsac-social.js');
     build_compile_sass(__DIR__.'/');
+    // NOTE: an earlier version of this application used VGMH as the global
+    // namespace instead of VSAC. This recreates the scripts and styles for
+    // backwards compatability.
+    $fix_backcompat = function ($file) {
+        $file = __DIR__ . '/' . $file;
+        $dest = basename($file);
+        $dest = str_replace('vsac', 'vgmh', $dest);
+        $dest = dirname($file) . '/' . $dest;
+        if (file_exists($dest) && filemtime($dest) >= filemtime($file)) {
+            return;
+        }
+        $source = file_get_contents($file);
+        $source = str_replace(['VSAC','vsac'], ['VGMH', 'vgmh'], $source);
+        file_put_contents($dest, $source);
+    };
+    $files = array(
+        'vsac-social.js',
+        'vsac-social-min.js',
+        'vsac-social.css',
+        'vsac-social-min.css',
+    );
+    foreach($files as $f) {
+        $fix_backcompat($f);
+    }
 }
 
 
