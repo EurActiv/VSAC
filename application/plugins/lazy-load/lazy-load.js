@@ -118,6 +118,7 @@
     $(function () {
         calculate_viewport();
         stack_event($(global), 'scroll', 100, calculate_viewport);
+        stack_event($(global), 'resize', 150, calculate_viewport);
     });
 
     //------------------------------------------------------------------------//

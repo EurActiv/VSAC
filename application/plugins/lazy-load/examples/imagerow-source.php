@@ -10,20 +10,6 @@ $aspects = array_values(config('aspect_ratios', array()));
 $strategies = array('resize','crop','crop-top','crop-bottom');
 $uid = 'resize-' . uniqid();
 
-// HACK! This plugin has a concurrency issue when using the filesystem cache
-// plugin and very large image files. Fixing the bug is a low priority because
-// it does not seem to be uncovered in real world use. But is shows in the demo.
-// This will warm up the cache so that the concurrency issue does not appear in
-// the demo.
-$hack_url = router_plugin_url('img.php', true);
-$hack_url = router_add_query($hack_url, array(
-    'image' => $url,
-    'strategy' => 'resize',
-    'aspect'   => $aspects[0],
-    'width'    => 400,
-));
-http_get($hack_url);
-
 
 ?>
 <div id="<?= $uid ?>" data-width="1">

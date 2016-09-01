@@ -5,6 +5,12 @@
  * (cal_*). It tries to cache items in folders on disk. It's a bit of a kludge,
  * but it works for most things. It's useful for systems that can't handle big
  * sqlite databases.
+ *
+ * NOTE: The directory-based structure for this cache system is not entirely
+ * mutually exclusive, and may occasionally have race condition errors. There
+ * is a built-in locking mechanism that prevents most issues, but highly
+ * concurrent applications may have errors. For this reason, it is better to
+ * use the sqlitecache driver where possible. 
  */
 
 namespace VSAC;
@@ -75,7 +81,7 @@ function fscache_get_meta($name)
 function fscache_set_meta($name, $value)
 {
     $path = fscache_path() . 'meta-' . md5($name) . '.txt';
-    file_put_contents($path, serialize(compact('name', 'value')), LOCK_EX);
+    file_put_contents($path, serialize(compact('name', 'value')));
 }
 
 //-- Actual caching ----------------------------------------------------------//
@@ -133,6 +139,7 @@ function fscache_get_item_id($identifier, callable $refresh)
     $item_id = md5($identifier);
     $dir = fscache_path() . $item_id . '/'; 
 
+    fscache_lock_wait($item_id);
     $item = is_dir($dir) && is_file($dir . 'item') && is_file($dir . 'meta')
           ? unserialize(file_get_contents($dir . 'meta'))
           : false;
@@ -140,16 +147,20 @@ function fscache_get_item_id($identifier, callable $refresh)
     if ($item && (!$item['expire'] || $item['expire'] >= time())) {
         return $item_id;
     }
+
+    // lock will be released in fscache_touch_item or fscache_insert_item
+    fscache_lock($item_id); 
+
     $content = call_user_func($refresh, $identifier);
 
-    if ($content === null) { // error handling
-        // if there's an old item just touch it on error
+    // error handling: if there's an old item, touch it, otherwise store null
+    // for five minutes to let the source cool off
+    if ($content === null) { 
         if ($item) {
-            fscache_touch_item($item_id);
-            return $item_id;
+            return fscache_touch_item($item_id);
+        } else {
+            return fscache_insert_item($identifier, null, 60 * 5);
         }
-        // cache error state for 5 minutes to let the source cool off
-        return fscache_insert_item($identifier, false, 60 * 5);
     }
 
     // if there's an old item but it hasn't changed, avoid inserting new
@@ -157,8 +168,7 @@ function fscache_get_item_id($identifier, callable $refresh)
     if ($item) {
         $old_content = fscache_get_item_content($item_id);
         if ($old_content === $content) {
-            fscache_touch_item($item_id);
-            return $item_id;
+            return fscache_touch_item($item_id);
         }
     }
 
@@ -179,20 +189,16 @@ function fscache_get_item_id($identifier, callable $refresh)
 function fscache_insert_item($identifier, $content, $expire = null)
 {
     $item_id = md5($identifier);
-    $dir = fscache_path() . $item_id . '/'; 
-    if (!is_dir($dir)) {
-        mkdir($dir);
-    } else {
-        $files = scandir($dir);
-        foreach (scandir($dir) as $file) {
-            if (strpos($file, '.') !== 0) {
-                unlink($dir . $file);
-            }
+    // lock will be released in fscache_touch_item
+    fscache_lock($item_id);
+    $dir = fscache_path() . $item_id . '/';
+    foreach (scandir($dir) as $file) {
+        if (strpos($file, '.') !== 0 && $file != 'lock') {
+            unlink($dir . $file);
         }
     }
-    file_put_contents($dir . 'item', serialize($content), LOCK_EX);
-    fscache_touch_item($item_id, $expire);
-    return $item_id;
+    file_put_contents($dir . 'item', serialize($content));
+    return fscache_touch_item($item_id, $expire);
 }
 
 /**
@@ -216,8 +222,11 @@ function fscache_touch_item($item_id, $expire = null)
     } else {
         $invalidate = 0;
     }
+    fscache_lock($item_id);
     $file = fscache_path() . $item_id . '/meta';
-    file_put_contents($file, serialize(compact('expire')), LOCK_EX); 
+    file_put_contents($file, serialize(compact('expire')));
+    fscache_unlock($item_id);
+    return $item_id;
 }
 
 /**
@@ -253,9 +262,14 @@ function fscache_get_permutation_id($item_id, $identifier, $create)
 {
     $dir = fscache_path();
     $permutation_id = $item_id . '/' . md5($identifier);
+    fscache_lock_wait($item_id);
+    fscache_lock_wait($permutation_id);
+
     if (is_file($dir . $permutation_id)) {
         return $permutation_id;
     }
+    // lock released in fscache_insert_permutation
+    fscache_lock($permutation_id);
     $content = fscache_get_item_content($item_id);
     $permutation = $content === null
                  ? null
@@ -277,7 +291,12 @@ function fscache_get_permutation_id($item_id, $identifier, $create)
 function fscache_insert_permutation($item_id, $identifier, $permutation)
 {
     $permutation_id = $item_id . '/' . md5($identifier);
-    file_put_contents(fscache_path() . $permutation_id, serialize($permutation), LOCK_EX);
+    if (is_null($permutation)) {
+        fscache_unlock($permutation_id);
+        return null;
+    }
+    file_put_contents(fscache_path() . $permutation_id, serialize($permutation));
+    fscache_unlock($permutation_id);
     return $permutation_id;
 }
 
@@ -291,9 +310,115 @@ function fscache_insert_permutation($item_id, $identifier, $permutation)
  */
 function fscache_get_permutation_content($permutation_id)
 {
+    if (!$permutation_id) {
+        return null;
+    }
+    fscache_lock_wait($permutation_id);
     $file = fscache_path() . $permutation_id;
     return file_exists($file) ? unserialize(file_get_contents($file)) : null;
 }
 
+//-- File locking ------------------------------------------------------------//
 
+/**
+ * Get a unique lock id for this process
+ *
+ * @return string a unique id, unique for the process
+ */
+function fscache_lock_id()
+{
+    static $lock_id = null;
+    if (is_null($lock_id)) {
+        $lock_id = uniqid();
+    }
+    return $lock_id;
+}
+
+/**
+ * Get the path to a lock file for either an item id or permutation id
+ *
+ * @param string $id either the item id or permutation id
+ *
+ * @return string the absolute path to the lock file (may not exist yet)
+ */
+function fscache_lock_file($id)
+{
+    if (strpos($id, '/') === false) {
+        $dir = fscache_path() . $id;
+        if (!is_dir($dir)) {
+            @mkdir($dir);
+        }
+        return $dir .  '/lock';
+    }
+    list($item_id, $permutation_id) = explode('/', $id, 2);
+    return fscache_lock_file($item_id) . '.' . $permutation_id;
+}
+
+/**
+ * Wait until a locked item or locked permutation is available. Will only wait
+ * for 30 seconds before it gives up.
+ *
+ * @param $item_id the item id or permutation id
+ * 
+ * @return bool true if resource is unlocked, false if it wasn't unlocked.
+ */
+function fscache_lock_wait($item_id)
+{
+    $lock_file = fscache_lock_file($item_id);
+    $lock_id = fscache_lock_id();
+
+    $breakout = time() + 30;
+    for ($i = 0; $i < 300; $i += 1) {
+        if (!file_exists($lock_file)) {
+            return true;
+        }
+        if (file_get_contents($lock_file) == $lock_id) {
+            return true;
+        }
+        // a previous locking process died
+        if (filemtime($lock_file) < (time() - 30)) {
+            unlink($lock_file);
+            return true;
+        }
+        usleep(100000); // 0.1 seconds
+    }
+    return false;
+}
+
+/**
+ * Lock a resourse
+ *
+ * @param $item_id the item id or permutation id
+ * 
+ * @return bool the locking was successful
+ */
+function fscache_lock($item_id)
+{
+    $lock_file = fscache_lock_file($item_id);
+    $lock_id = fscache_lock_id();
+    if (file_exists($lock_file) && file_get_contents($lock_file) == $lock_id) {
+        return true;
+    }
+    if (!fscache_lock_wait($item_id)) {
+        return false;
+    }
+    file_put_contents($lock_file, $lock_id);
+    return file_exists($lock_file) && file_get_contents($lock_file) == $lock_id;
+}
+
+/**
+ * Unlock a resource when done with it
+ *
+ * @param $item_id the item id or permutation id
+ *
+ * @return void
+ */
+function fscache_unlock($item_id)
+{
+    $lock_file = fscache_lock_file($item_id);
+    $lock_id = fscache_lock_id();
+    if (file_exists($lock_file) && file_get_contents($lock_file) == $lock_id) {
+        unlink($lock_file);
+    }
+}
 
