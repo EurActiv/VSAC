@@ -40,7 +40,33 @@ Notes:
 
 ###Installing on Debian 8 (Jessie)
 
-This section is not complete
+####With PHP7 (recommended)
+
+**Repositories**
+
+ * Add the DotDeb "Jessie" repository ( [instructions](https://www.dotdeb.org/instructions/) )
+
+**Packages**
+
+This should install everything:
+
+    root@machine:~/# apt-get install apache2 apache2-mpm-itk apache2-utils \
+     php7.0 php7.0-cli php7.0-curl php7.0-imagick php7.0-intl php7.0-readline \
+     php7.0-sqlite php7.0-mbstring php7.0-tidy libapache2-mod-php7.0 sqlite3 \
+     uglifyjs ruby-compass
+
+_Note:_ At the time of writing, the version of UglifyJS packaged with Debian8 has a bug that breaks `uglifyjs --version`. As such, the `build` module will report that the correct version is not installed. That's OK, it works. If you want to squelch the error, you can install `npm` and use `npm install uglify-js` instead.
+
+
+####With PHP5.6
+
+No extra repositories are required. This should install everything:
+
+    root@machine:~/# apt-get install apache2 apache2-mpm-itk apache2-utils \
+     php5 php5-cli php5-curl php5-imagick php5-intl php5-readline php5-sqlite \
+     php5-tidy libapache2-mod-php5 sqlite3 uglifyjs ruby-compass
+
+_Note:_ The same UglifyJS bug as noted in the PHP7 section applies here.
 
 ###Installing on Ubuntu 16.04
 
