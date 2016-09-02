@@ -6,6 +6,10 @@
 
 namespace VSAC;
 
+use_module('filesystem');
+use_module('response');
+use_module('callmap');
+
 //----------------------------------------------------------------------------//
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
@@ -32,6 +36,12 @@ function front_controller_test()
 //-- Public API                                                             --//
 //----------------------------------------------------------------------------//
 
+/**
+ * Parse the request URL to get the plugin and controller, then hand over to
+ * the controller.
+ *
+ * @return void
+ */
 function front_controller_dispatch()
 {
 
@@ -62,7 +72,14 @@ function front_controller_dispatch()
 //-- Private Functions                                                      --//
 //----------------------------------------------------------------------------//
 
-
+/**
+ * Resolve the path to a controller/asset within a plugin
+ *
+ * @param string $plugin the plugin to resolve to
+ * @param string $file the file to look for for the controller/asset
+ *
+ * @return string the path to the controller/asset file, or false if not found
+ */
 function front_controller_resolve($plugin, $file)
 {
     $file = $plugin == '_framework'
@@ -73,11 +90,29 @@ function front_controller_resolve($plugin, $file)
     return is_file($file) ? $file : false;
 }
 
+/**
+ * Find the plugin that corresponds to a URL path
+ *
+ * @param array $path_info the Query path, exploded on "/", the plugin will be
+ * shifted off it if it's found.
+ *
+ * @return string the plugin to use
+ */
 function front_controller_locate_plugin(&$path_info)
 {
     return count($path_info) > 1 ? array_shift($path_info) : '_framework';
 }
 
+/**
+ * Find the controller file
+ *
+ * @param string $plugin the return value from front_controller_locate_plugin()
+ * @param array $pathinfo the $path_info array, after it was passed to
+ * front_controller_locate_plugin(). The controller will be popped off it if
+ * it exists. If it doesn't, index.php is returned
+ *
+ * @return string the front controller abspath, from front_controller_resolve()
+ */
 function front_controller_locate_controller($plugin, &$path_info)
 {
     $controller = array();
@@ -99,6 +134,15 @@ function front_controller_locate_controller($plugin, &$path_info)
     return $resolved;
 }
 
+/**
+ * Take the resolved controller path from front_controller_locate_controller()
+ * and send it. PHP files will be executed. Other assets will be sent.
+ * Non-whitelisted file types will 404.
+ *
+ * @param string $controller_path
+ *
+ * @return void (will always die).
+ */
 function front_controller_discharge($controller_path)
 {
     $ext = strtolower(pathinfo($controller_path, PATHINFO_EXTENSION));
@@ -113,6 +157,8 @@ function front_controller_discharge($controller_path)
     if ($ext == 'php') {
         require $controller_path;
     } elseif (in_array($ext, $authorized_exts)) {
+        $file = substr($controller_path, strlen(filesystem_plugin_path()));
+        callmap_log($file);
         response_send_file($controller_path); 
     } else {
         response_send_error(400, 'Bad extension?');

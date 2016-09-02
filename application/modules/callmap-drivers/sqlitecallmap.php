@@ -40,6 +40,31 @@ function sqlitecallmap_log_hit($provider, $consumer, $gateway)
     );
 }
 
+/** @see callmap_get_node_id */
+function sqlitecallmap_get_node_id($label)
+{
+    $touch = function ($node_id) {
+        $sql = "UPDATE nodes SET last_touch = ? WHERE id = ?";
+        sqlitecallmap_query($sql, array(time(), $node_id));
+    };
+    $find = function () use ($label) {
+        $sql = "SELECT id FROM nodes WHERE label = ?";
+        return sqlitecallmap_query($sql, $label)->fetchColumn();
+    };
+    $insert = function () use ($label) {
+        $sql = "INSERT OR REPLACE INTO nodes (id, label)
+                VALUES ((SELECT id FROM nodes WHERE label = ?), ?)";
+        sqlitecallmap_query($sql, array($label, $label));
+    };
+
+    if (!($id = $find())) {
+        $insert();
+        $id = $find();
+    }
+    $touch($id);
+    return (int) $id;
+}
+
 /** @see callmap_clean() */
 function sqlitecallmap_clean()
 {
@@ -133,32 +158,7 @@ function sqlitecallmap_create(\PDO $pdo)
 
 }
 
-/**
- * Get a callmap node id
- */
-function sqlitecallmap_get_node_id($label)
-{
-    $touch = function ($node_id) {
-        $sql = "UPDATE nodes SET last_touch = ? WHERE id = ?";
-        sqlitecallmap_query($sql, array(time(), $node_id));
-    };
-    $find = function () use ($label) {
-        $sql = "SELECT id FROM nodes WHERE label = ?";
-        return sqlitecallmap_query($sql, $label)->fetchColumn();
-    };
-    $insert = function () use ($label) {
-        $sql = "INSERT OR REPLACE INTO nodes (id, label)
-                VALUES ((SELECT id FROM nodes WHERE label = ?), ?)";
-        sqlitecallmap_query($sql, array($label, $label));
-    };
 
-    if (!($id = $find())) {
-        $insert();
-        $id = $find();
-    }
-    $touch($id);
-    return $id;
-}
 
 function sqlitecallmap_log_edge($cid, $pid, $gid)
 {

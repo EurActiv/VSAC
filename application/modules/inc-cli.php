@@ -229,7 +229,7 @@ function cli_ask_select($question, array $options, $default = null)
 function cli_dispatch()
 {
     global $argv;
-
+    bootstrap_plugin('_framework');
     cli_title('VSAM CLI Console', '#');
     $options = scan_include_dirs('cli');
     $options = array_filter(array_map(function ($f) {

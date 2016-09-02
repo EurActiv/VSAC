@@ -5,6 +5,9 @@ namespace VSAC;
 use_module('backend-all');
 use_module('callmap');
 
+//----------------------------------------------------------------------------//
+//-- functions                                                              --//
+//----------------------------------------------------------------------------//
 
 /**
  * Generate a pseudo rainbow so that we can see what goes where
@@ -23,144 +26,227 @@ $get_colors = function ($steps) {
     return $return;
 };
 
-$get_node_ids = function ($edges) {
-    $nodes = array();
-    foreach ($edges as $edge) {
-        unset($edge['id']);
-        $edge = array_values(array_map('intval', $edge));
-        $nodes = array_merge($nodes, $edge);
-    }
-    return array_unique($nodes);
-};
-
-$filter_edges = function ($nids, $edges) {
-    return array_filter($edges, function ($edge) use ($nids) {
-        unset($edge['id']);
-        $edge = array_map('intval', $edge);
-        extract($edge);
-        return in_array($cid, $nids) || in_array($pid, $nids) || in_array($gid, $nids); 
+/**
+ * Generate the form for selecting nodes
+ */
+$form = function ($all_nodes, $selected_nodes) {
+    form_form(['id'=>'select-nodes'], function () use ($all_nodes, $selected_nodes) {
+        $gateway_regex = '/^\[.*\]$/';
+        $link = router_url(basename(__FILE__)) . '?base=';
+        $tr = function ($label, $id) use ($link, $selected_nodes) {
+            echo "<td>";
+            $checked = in_array($id, $selected_nodes);
+            form_checkbox($checked, $label, "nodes[{$id}]", 'node__'.$id);
+            echo "</td>";
+            echo "<td><a href='{$link}{$id}'><i class='fa fa-eye'></i></a></td>";
+            echo "</tr>";
+        };
+        echo "<table class='table-hover'>";
+        echo '<tr><th colspan="2">Show Gateways</th></tr>';
+        foreach ($all_nodes as $node) {
+            if (preg_match($gateway_regex, $node['label'])) {
+                $tr($node['label'], $node['id']);
+            }
+        }
+        echo '<tr><th colspan="2">Show Nodes</th></tr>';
+        foreach ($all_nodes as $node) {
+            if (!preg_match($gateway_regex, $node['label'])) {
+                $tr($node['label'], $node['id']);
+            }
+        }
+        echo "</table>";
+        form_submit();
     });
 };
 
-backend_head('API Call Map', [], function () {
+/**
+ * Generate the visualisation
+ */
+$visualize = function ($visualize_nodes, $visualize_edges) use ($get_colors) {
+    $colors = $get_colors(count($visualize_edges));
+    $data = array(
+        'nodes' => array_values($visualize_nodes),
+        'edges' => array_values($visualize_edges),
+    );
+    ?>
+    <script>(function (global, $){
+        var data = <?= json_encode($data); ?>;
+        var colors = <?= json_encode($colors); ?>;
+        var nodes = {};
+        var edges = [];
+        var graph = new Springy.Graph();
+        var getNode = function (node_id) {
+            var n = nodes['_' + node_id];
+            if (!n) {
+                return false;
+            }
+            if (!n.node) {
+                n.node = graph.newNode({
+                    label: n.label
+                });
+            }
+            return n;
+        }
+        var addEdge = function (from, to, color, always) {
+            var ename = from.id + '_' + to.id;
+            if (always || edges.indexOf(ename) < 0) {
+                graph.newEdge(from.node, to.node, {color: color});
+            }
+            edges.push(ename);
+        };
+        data.nodes.map(function (node) {
+            nodes['_' + node.id] = node;
+        });
+        data.edges.map(function (edge) {
+            var consumer = getNode(edge.cid),
+                provider = getNode(edge.pid),
+                gateway = getNode(edge.gid),
+                always = consumer && provider && gateway;
+                color = colors.shift();
+            if (!gateway && consumer && provider) {
+                addEdge(provider, consumer, color, always);
+            }
+            if (gateway && consumer) {
+                addEdge(gateway, consumer, color, always);
+            }
+            if (gateway && provider) {
+                addEdge(provider, gateway, color, always);
+            }
+        });
 
+        $(function(){
+            var canvas = $('#callmap');
+            canvas.attr('width', canvas.parent().width());
+            canvas.attr('height', Math.min(1500, Math.max(400, $('#select-nodes').height())));
+            var springy = window.springy = canvas.springy({
+                graph: graph,
+            });
+        });
+    }(window, jQuery));</script>
+    <canvas id="callmap" width="640" height="480" />
+    <?php
+};
+
+/**
+ * Generate the callmap table
+ */
+$table = function ($visualize_nodes, $visualize_edges) {
+    // and for the tables
+    $table_nodes = array();
+    foreach ($visualize_nodes as $node) {
+        $table_nodes[$node['id']] = $node['label'];
+    }
+
+    echo "<table class='table table-bordered'>";
+    echo "<tr><th>Consumer</th><th>Via</th><th>Provider</th></tr>";
+    $link = router_url(basename(__FILE__)) . '?base=';
+    $td = function ($id) use ($table_nodes, $link) {
+        printf(
+            '<td><a href="%s">%s</a></td>',
+            $link . $id,
+            isset($table_nodes[$id]) ? $table_nodes[$id] : '<i class="fa fa-eye"></i>'
+        );
+    };
+    foreach ($visualize_edges as $edge) {
+        echo "<tr>";
+        $td($edge['cid']);
+        $td($edge['gid']);
+        $td($edge['pid']);
+        echo "</tr>";
+    }
+    echo "</table>";
+};
+
+//----------------------------------------------------------------------------//
+//-- data processing                                                        --//
+//----------------------------------------------------------------------------//
+
+
+// fetch and normalize all data
+$data = callmap_dump();
+$all_nodes = array_map(function ($node) {
+    $node['id'] = (int) $node['id'];
+    return $node;
+}, $data['nodes']);
+$all_edges = array_map(function ($edge) {
+    unset($edge['id']);
+    $edge = array_map('intval', $edge);
+    return $edge;
+}, $data['edges']);
+
+if ($base = (int) request_query('base', '')) {
+    $new_nodes = array();
+    foreach ($all_edges as $edge) {
+        if (in_array($base, $edge)) {
+            foreach ($edge as $node_id) {
+                if (!isset($new_nodes[$node_id])) {
+                    $new_nodes[$node_id] = 1;
+                }
+            }
+        }
+    }
+    response_redirect(router_add_query(
+        router_url(basename(__FILE__)),
+        array('nodes'=>$new_nodes)
+    ));
+}
+
+// get and normalize the nodes that are selected
+$selected_nodes = array_keys(request_query('nodes', array()));
+if (empty($selected_nodes)) {
+    $selected_nodes = config('callmap_visualize_default', array());
+    $selected_nodes = array_map(__NAMESPACE__ . '\\callmap_get_node_id', $selected_nodes);
+}
+$selected_nodes = array_map('intval', $selected_nodes);
+
+// get the nodes and edges that will be visualized
+$visualize_nodes = array_filter($all_nodes, function ($node) use ($selected_nodes) {
+    return in_array($node['id'], $selected_nodes);
+});
+$visualize_edges = array_filter($all_edges, function ($edge) use ($selected_nodes) {
+    return in_array($edge['cid'], $selected_nodes)
+        || in_array($edge['pid'], $selected_nodes)
+        || in_array($edge['gid'], $selected_nodes);
+});
+
+
+
+
+//----------------------------------------------------------------------------//
+//-- output                                                                 --//
+//----------------------------------------------------------------------------//
+
+
+backend_head('API Call Map', [], function () {
     $s = '<script src="%s"></script>';
     printf($s, router_url('cdn/springy/2.0.1/springy.js'));
     printf($s, router_url('cdn/springy/2.0.1/springyui.js'));
-
+    ?><style>
+        form table a { visibility:hidden; display:block;  margin:3px; }
+        form table tr:hover a { visibility:visible;}
+        form table .checkbox {margin-top:3px; margin-bottom:3px;}
+    </style><?php
 });
 
-// top menu
-$base_url = router_url(basename(__FILE__));
-$options = array(
-    'default',
-    'show_gateways',
-    'gateways_as_consumers',
-    'gateways_as_providers',
-);
-$options = array_map(function ($option) use ($base_url) {
-    return sprintf(
-        '<a href="%s" class="btn btn-link %s">%s</a>',
-        router_add_query($base_url, array('type' => $option)),
-        request_query('type', 'default') == $option ? 'disabled' : '',
-        ucfirst(str_replace('_', ' ', $option))
-    );
-}, $options);
-echo '<p class="pull-right">Click any node for details</p>';
-echo '<p class="pull-left">' . implode('|' , $options) . '</p>';
-echo '<hr style="clear:both">';
 
-$data = callmap_dump();
-if ($base = request_query('base')) {
-    $base_id = 0;
-    foreach ($data['nodes'] as $node) {
-        if ($node['label'] == $base) {
-            $base_id = (int) $node['id'];
-        }
-    }
-    $edges = $filter_edges(array($base_id), $data['edges']);
-    $data['edges'] = array_values($edges);
+echo '<div class="row"><div class="col-sm-3">';
+
+$form($all_nodes, $selected_nodes);
+
+
+echo '</div><div class="col-sm-9">';
+
+if (count($visualize_nodes) > 50) {
+    $table($visualize_nodes, $visualize_edges);
+} else {
+    $visualize($visualize_nodes, $visualize_edges);
 }
-$colors = $get_colors(count($data['edges']));
-?>
-<script>(function (global, $){
-    var data = <?= json_encode($data); ?>;
-    var colors = <?= json_encode($colors); ?>;
-    var query = <?= json_encode(request_query_all()) ?>;
-    var nodes = {};
-    var graph = new Springy.Graph();
-    var getNode = function (node_id) {
-        var n = nodes['_' + node_id];
-        if (!n) {
-            return false;
-        }
-        if (!n.node) {
-            n.node = graph.newNode({
-                label: n.label
-            });
-        }
-        return n.node;
-    }
-    var addEdge = function (cid, pid, color) {
-        consumer = getNode(cid);
-        provider = getNode(pid);
-        if (consumer && provider) {
-            graph.newEdge(provider, consumer, {color: color});
-        }
-    };
-    if (query.base) {
-        query.type = 'show_gateways';
-    }
-    data.nodes.map(function (node) {
-        nodes['_' + node.id] = {label: node.label};
-    });
-    data.edges.map(function (edge) {
-        var consumer, provider, gateway;
-        var color = colors.shift();
-        switch (query.type) {
-            case 'show_gateways':
-                addEdge(edge.cid, edge.gid, color);
-                addEdge(edge.gid, edge.pid, color);
-                break;
-            case 'gateways_as_consumers':
-                addEdge(edge.gid, edge.pid, color);
-                break;
-            case 'gateways_as_providers':
-                addEdge(edge.cid, edge.gid, color);
-                break;
-            default:
-                addEdge(edge.cid, edge.pid, color);
-                break;
-        }
-    });
 
-    $(function(){
-        var canvas = $('#callmap');
-        canvas.attr('width', canvas.parent().width());
-        var springy = window.springy = canvas.springy({
-            graph: graph,
-            nodeSelected: function(node){
-                canvas.data('rebase', node.data.label);
-            }
-        });
-        canvas.on('mousemove', function () {
-            canvas.data('rebase', false);
-        });
-        canvas.on('click', function () {
-            var href = global.location.href, rebase = canvas.data('rebase');
-            if (rebase) {
-                href = href.replace(/\?.*$/, '');
-                href += '?type=none&base=' + encodeURIComponent(rebase);
-                global.location.href = href;
-            }
-        });
-    });
-}(window, jQuery));</script>
-<?php
-?>
-<canvas id="callmap" width="640" height="480" />
+echo '</div><div class="col-sm-3">';
 
-<?php
+
+echo '</div>';
+
 
 backend_foot();
 

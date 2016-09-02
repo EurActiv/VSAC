@@ -18,7 +18,18 @@ function callmap_config_items()
             'callmap_driver',
             '',
             'The callmap driver to use, either "sqlitecallmap" or "noopcallmap"'
-        ],
+        ], [
+            'callmap_labels',
+            array(),
+            'Labels for the callmap, where the key is the regular expression to
+            match and the value is the label to use',
+            true,
+        ], [
+            'callmap_visualize_default',
+            array(),
+            'Nodes to visualize by default',
+            true
+        ]
     );
 }
 
@@ -53,10 +64,15 @@ function callmap_test()
 function callmap_log($provider, $consumer = null, $gateway = null)
 {
     $provider = callmap_normalize_label($provider);
+
     if (!$consumer) {
         $consumer = request_header('referer', request_query('referer', 'WWW'));
     }
     $consumer = callmap_normalize_label($consumer);
+
+    $provider = callmap_alias_label($provider);
+    $consumer = callmap_alias_label($consumer);
+
     if (!$gateway) {
         $gateway = plugin();
         if ($gateway == '_framework') {
@@ -65,6 +81,18 @@ function callmap_log($provider, $consumer = null, $gateway = null)
     }
     $gateway = '[' . callmap_normalize_label($gateway) . ']';
     return callmap_log_hit($consumer, $provider, $gateway);
+}
+
+/**
+ * Get a node id from its label
+ *
+ * @param string $label the label, already normalized
+ *
+ * @return integer the node id
+ */
+function callmap_get_node_id($label)
+{
+    return driver_call('callmap', 'get_node_id', [$label]);
 }
 
 /**
@@ -109,6 +137,24 @@ function callmap_dump()
 function callmap_log_hit($provider, $consumer, $gateway)
 {
     return driver_call('callmap', 'log_hit', [$provider, $consumer, $gateway]);
+}
+
+/**
+ * Check if the label has an alias in the callmap, and return the alias if so
+ *
+ * @param string $label the label to match
+ *
+ * @return string the alias, or the original label
+ */
+function callmap_alias_label($label)
+{
+    $aliases = config('callmap_labels', array());
+    foreach ($aliases as $regex => $alias) {
+        if (preg_match($regex, $label)) {
+            return $alias;
+        }
+    }
+    return $label;
 }
 
 /**

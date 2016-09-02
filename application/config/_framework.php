@@ -19,6 +19,8 @@ $config = array(
     'error_driver' => 'sqliteerror',
     // default configuration for call map logging
     'callmap_driver' => 'sqlitecallmap',
+    'callmap_labels' => array(),
+    'callmap_visualize_default' => array(),
     // default configuration of apikey module
     'api_key'        => 'keyboard_cat',
 

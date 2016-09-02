@@ -24,6 +24,11 @@ function noopcallmap_log_hit($provider, $consumer, $gateway)
 {
 }
 
+/** @see callmap_get_node_id */
+function noopcallmap_get_node_id($label)
+{
+}
+
 /** @see callmap_clean() */
 function noopcallmap_clean()
 {
