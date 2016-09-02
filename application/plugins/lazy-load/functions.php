@@ -69,7 +69,7 @@ function lazy_load_image_url($strategy, $aspect, $width, $image)
     }
     return router_use_rewriting()
          ? router_plugin_url('img/'.implode('/', $params))
-         : router_plugin_url('img.php?'.http_build_query($params))
+         : router_add_query(router_plugin_url('img.php'), $params)
          ;
 }
 
@@ -151,13 +151,13 @@ function lazy_load_get_query_parameters()
 function lazy_load_get_check_image_url($url, &$error = '')
 {
     // repair url encoding
-    $url = urlencode($url);
+    $url = rawurlencode($url);
     $url = str_replace(array('%3A', '%2F', '%25'), array(':', '/', '%'), $url);
     // repair protocol if it was not properly URL encoded
     $url = preg_replace('#^(https?:)/+#', '$1//', $url);
     if (!($url = http_uri_is_authorized($url, $error))) {
         $error = $error ? $error : 'Image url not authorized';
-        $error .= urlencode($url);
+        $error .= rawurlencode($url);
         return '';
     }
     return $url;

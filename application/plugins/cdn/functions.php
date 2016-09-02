@@ -46,8 +46,8 @@ function cdn_bootstrap()
 function cdn_url($filename)
 {
     return router_use_rewriting()
-            ?  router_plugin_url($filename)
-            :  router_plugin_url('index.php?path='.urlencode($filename));
+            ? router_plugin_url($filename)
+            : router_add_query(router_plugin_url('index.php', ['path' => $filename]));
             ;
 }
 

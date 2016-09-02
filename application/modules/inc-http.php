@@ -156,7 +156,11 @@ function http_post($url, $data, $multipart = false)
     $ch = http_get_curl_handle($url);
     curl_setopt($ch, CURLOPT_POST, 1);
 
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $multipart ? $data : http_build_query($data));
+    if (!$multipart) {
+        $data = http_build_query($data); // note: must be RFC1738
+    }
+
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
     return http_exec_curl($ch);
 }

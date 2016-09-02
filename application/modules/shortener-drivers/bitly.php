@@ -7,6 +7,7 @@
 namespace VSAC;
 
 use_module('http');
+use_module('router');
 
 //----------------------------------------------------------------------------//
 //-- Implementation                                                         --//
@@ -22,13 +23,15 @@ function bitly_shorten($url)
         return $url;
     }
 
-    $api_query = http_build_query(array(
-        'access_token' => $shortener_api_key,
-        'domain'       => $shortener_url,
-        'longUrl'      => $url,
-        'format'       => 'json',
-    ));
-    $api_url = 'https://api-ssl.bitly.com/v3/shorten?' . $api_query; 
+    $api_url = router_add_query(
+        'https://api-ssl.bitly.com/v3/shorten',
+        array(
+            'access_token' => $shortener_api_key,
+            'domain'       => $shortener_url,
+            'longUrl'      => $url,
+            'format'       => 'json',
+        )
+    );
 
     $response = http_get($api_url);
     if (!$response['body'] || $response['error']) {

@@ -127,12 +127,7 @@ function auth_require_authenticated()
  */
 function auth_login_url($query_params = array())
 {
-    $url = router_url('login.php');
-    if (!empty($query_params)) {
-        $url .= strpos($url, '?') === false ? '?' : '&';
-        $url .= http_build_query($query_params);
-    }
-    return $url;
+    return router_add_query(router_url('login.php'), $query_params);
 }
 
 /**

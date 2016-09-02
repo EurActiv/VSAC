@@ -55,7 +55,7 @@ function social_get_share_url($service, $url, $title)
         default:
             return '';
     }
-    return $base . '?' . http_build_query($query, null, '&', PHP_QUERY_RFC3986);
+    return router_add_query($base, $query);
 }
 
 
@@ -72,18 +72,20 @@ function social_get_share_count($service, $url)
 {
     switch ($service) {
         case 'linkedin':
-            $base = 'https://www.linkedin.com/countserv/count/share';
-            callmap_log($base);
-            $query = array('url' =>  $url, 'format' => 'json');
-            $get = $base . '?' . http_build_query($query);
+            $get = router_add_query(
+                'https://www.linkedin.com/countserv/count/share',
+                array('url' =>  $url, 'format' => 'json')
+            );
+            callmap_log($get);
             $response = http_get($get);
             $body = json_decode($response['body'], true);
             return empty($body['count']) ? 0 : (int) $body['count'];
         case 'gplus':
-            $base = 'https://plusone.google.com/_/+1/fastbutton';
-            callmap_log($base);
-            $query = array('url' => $url);
-            $get = $base . '?' . http_build_query($query);
+            $get = router_add_query(
+                'https://plusone.google.com/_/+1/fastbutton',
+                array('url' => $url)
+            );
+            callmap_log($get);
             $response = http_get($get);
             $regex = '/id="aggregateCount"[^>]*>([^<]+)</';
             if (preg_match($regex, $response['body'], $matches)) {

@@ -105,7 +105,7 @@ function router_add_query($url, array $qp = array())
         $qp = array_merge($old_qp, $qp);
     }
     if (!empty($qp)) {
-        $url .= '?' . http_build_query($qp);
+        $url .= '?' . http_build_query($qp, null, '&', PHP_QUERY_RFC3986);
     }
     return $url;
 }

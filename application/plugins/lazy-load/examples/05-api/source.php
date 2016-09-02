@@ -17,7 +17,7 @@ $qp_public = $qp = array(
 );
 
 
-$url = $endpoint . '?' . http_build_query($qp);
+$url = router_add_query($endpoint, $qp);
 $response = json_decode(file_get_contents($url), true);
 $img = $response['lazyload'];
 
@@ -26,8 +26,9 @@ $replace = '$1$2(...)$4';
 $response['lazyload'] = preg_replace($regex, $replace, $response['lazyload']);
 
 $qp_public['api_key'] = '-private-';
+$url_public = router_add_query($endpoint, $qp_public);
 $qp_public = htmlspecialchars(var_export($qp_public, true));
-$url_public = $endpoint . '?' . http_build_query($qp);
+
 
 
 ?><pre><code>

@@ -11,12 +11,10 @@ namespace VSAC;
 <?php
     $api_key = config('api_key', '');
     $feed_url = function ($handle) use ($api_key) {
-        $return = router_plugin_url('full-content.php', true)
-                . '?' . http_build_query(array(
-                          'feed' => $handle,
-                          'api_key' => $api_key,
-                        ));
-        return $return;
+        return router_add_query(
+            router_plugin_url('full-content.php', true),
+            array('feed' => $handle, 'api_key' => $api_key)
+        );
     };
 ?>
 <p>Currently configured feeds:</p>

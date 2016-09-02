@@ -25,10 +25,7 @@ if (!apikey_is_valid()) {
 
 // TODO: complete this file
 
-$response['cdn_url'] = router_use_rewriting()
-                     ? router_plugin_url($filename)
-                     : router_plugin_url('index.php?path='.urlencode($filename));
-                     ;
+$response['cdn_url'] = cdn_url($filename);
 response_send_json($response);
 
 
