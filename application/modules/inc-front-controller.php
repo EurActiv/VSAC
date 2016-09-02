@@ -157,8 +157,15 @@ function front_controller_discharge($controller_path)
     if ($ext == 'php') {
         require $controller_path;
     } elseif (in_array($ext, $authorized_exts)) {
-        $file = substr($controller_path, strlen(filesystem_plugin_path()));
-        callmap_log($file);
+        if ($file = substr($controller_path, strlen(filesystem_plugin_path()))) {
+            $file = array_filter(explode('/', $file));
+            while (count($file) > 2) {
+                array_pop($file);
+            }
+            if (!empty($file)) {
+                callmap_log(implode('/', $file));
+            }
+        }
         response_send_file($controller_path); 
     } else {
         response_send_error(400, 'Bad extension?');
