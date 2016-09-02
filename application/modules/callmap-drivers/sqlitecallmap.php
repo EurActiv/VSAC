@@ -1,11 +1,10 @@
 <?php
 
 /**
- * This is the sqlite driver for the Key-Value Abstraction Layer (kval).
+ * This is the sqlite driver for the callmap.
  *
- * Primary limitation of this driver is database size. Namely, some combinations
- * of OS and filesystem (32 bit linux, simfs) will only allow you to have files
- * of 2.1GB in size before they just crash.
+ * This driver is not appropriate for high-traffic applications, it mostly
+ * exists for testing purposes.
  */
 
 namespace VSAC;
