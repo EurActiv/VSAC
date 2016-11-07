@@ -16,14 +16,8 @@ auth_require_authenticated();
 // format the arguments in a backtrace for display
 $format_args = function ($args) {
     if (empty($args)) return '';
-    $return = "";
-    foreach ($args as $arg) {
-        $arg = var_export($arg, true);
-        $arg = preg_replace('/\s+/', ' ', $arg);
-        if (strlen($arg) > 85) $arg = substr($arg, 0, 82) . '...';
-        $return .= "\n    " . htmlspecialchars($arg);
-    }
-    $return .= "\n  ";
+    $args = array_map('htmlspecialchars', $args);
+    return "\n\t\t" . implode("\n\t\t", $args) . "\n";
 };
 
 // format a backtrace array for display
@@ -63,7 +57,8 @@ $print_inspect = function ($e) use ($format_trace) {
         date('Y-m-d H:i:s', $e['errlog_ts']),
         $e['errlog_cnt'],
         $format_trace($e['trace'])
-    );   
+    );
+
 };
 
 // print the actions form that goes under the inspection panel

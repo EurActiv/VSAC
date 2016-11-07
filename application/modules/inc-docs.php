@@ -10,6 +10,12 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function docs_depends()
+{
+    return array('backend', 'filesystem');
+}
+
 /** @see example_module_config_items() */
 function docs_config_items()
 {

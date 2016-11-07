@@ -10,22 +10,25 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function error_depends()
+{
+    return driver_call('error', 'depends');
+}
+
 /** @see example_module_config_items() */
 function error_config_items()
 {
-    return array();
+    return array([
+        'error_driver',
+        '',
+        'The driver to use for error logging, one of "noop" or "sqlite"'
+    ],);
 }
 
 /** @see example_module_sysconfig() */
 function error_sysconfig()
 {
-    $drivers = \PDO::getAvailableDrivers();
-    if (!in_array('sqlite', $drivers)) {
-        return 'SQLite PDO Driver not installed';
-    }
-    if (!class_exists('\\SQLite3')) {
-        return 'SQLite3 extension is not installed';
-    }
     return true;
 }
 
@@ -166,9 +169,10 @@ function error_driver_limitations()
  */
 function error_force_driver(callable $callback)
 {
-    $force = !((bool) option('error_driver', ''));
-    if ($force) {
-        force_conf('error_driver', framework_option('error_driver', 'nooperror'));
+    $force = false;
+    if (!option('error_driver', '')) {
+        $force = framework_option('error_driver', 'noop');
+        force_conf('error_driver', $force);
     }
     $return = call_user_func($callback);
     if ($force) {

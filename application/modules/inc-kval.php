@@ -24,6 +24,15 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function kval_depends()
+{
+    return array_merge(
+        driver_call('kval', 'depends'),
+        array()
+    );
+}
+
 /** @see example_module_config_items() */
 function kval_config_items()
 {
@@ -32,10 +41,6 @@ function kval_config_items()
             'kval_ttl',
             0,
             'The time, in seconds, to cache key:value pairs before revalidating'
-        ], [
-            'kval_quota',
-            0.0,
-            'The size, in bytes, to allow the key:value store to grow to'
         ], [
             'kval_driver',
             '',
@@ -54,7 +59,6 @@ function kval_sysconfig()
 function kval_test()
 {
     force_conf('kval_ttl', 2);
-    force_conf('kval_quota', 1024 * 1024);
     $key = 'test_' . time();
     $value = md5($key);
     $value2 = md5($key);
@@ -96,13 +100,13 @@ function kval_size()
 }
 
 /**
- * Clean the database and enforce disc quota
+ * Clean the database
  *
  * @return array timestamps of last clean and last invalidate
  */
-function kval_clean($invalidate = 3600, $vacuum =  86400)
+function kval_clean($clean = 3600, $vacuum =  86400)
 {
-    return driver_call('kval', 'clean', [$invalidate, $vacuum]);
+    return driver_call('kval', 'clean', [$clean, $vacuum]);
 }
 
 /**
@@ -118,7 +122,6 @@ function kval_status($clean_url)
 {
     backend_collapsible('Key-Value Store', function () use ($clean_url) {
         $size = backend_format_size(kval_size());
-        $quota = backend_format_size(config('kval_quota', 0.0));
         $last_invalidate = kval_get('__last_invalidate', 0);
         $last_vacuum = kval_get('__last_vacuum', 0);
         $interval = time() - (60 * 60 * 24);
@@ -128,14 +131,13 @@ function kval_status($clean_url)
 
         ?>
         <p>The database that powers this API is currently using
-            <code><?= $size ?></code>. The configured disk quota is
-            <code><?= $quota ?></code>.<p>
+            <code><?= $size ?></code>.<p>
         <p>Expired items were last cleaned from the cache
-            <?= backend_format_time_ago($last_invalidate) ?>. The dabase was last vacuumed
-            <?= backend_format_time_ago($last_vacuum) ?>.</p>
-        <p>To ensure that the database is regularly cleaned to respect quotas,
-            make sure the following line is in your cron tab (adjusting the
-            frequency to your needs):</p>
+            <?= backend_format_time_ago($last_invalidate) ?>. The database was
+            last vacuumed <?= backend_format_time_ago($last_vacuum) ?>.</p>
+        <p>To ensure that the database is regularly cleaned, make sure the
+            following line is in your cron tab (adjusting the frequency to your
+            needs):</p>
         <pre><code>/15 * * * wget -q -O - <?= $clean_url ?></code></pre>
         <p class="text-right">
             Driver: <?= driver('kval') ?> |
@@ -174,6 +176,23 @@ function kval_key($key)
 }
 
 /**
+ * Turn a passed expires value into a timestamp that can be compared to
+ * the timestamp in an item
+ * 
+ * @param int $expires the max age the maximimum allowable age, in
+ * seconds, of the value. Set to a zero for no expiration, null for the
+ * configured default.
+ */
+function kval_expires($expires)
+{
+    if (is_null($expires)) {
+        $expires = config('kval_ttl', 0);
+    }
+    $expires_ts = ($expires && $expires > 0) ? time() - $expires : 0;
+    return $expires_ts;
+}
+
+/**
  * Get a value by key
  *
  * @param string $key @see kval_key()
@@ -183,7 +202,13 @@ function kval_key($key)
  */
 function kval_get($key, $expires = null)
 {
-    return driver_call('kval', 'get', [$key, $expires]);
+    $_key = kval_key($key);
+    $_expires = kval_expires($expires);
+    $item = kval_get_item($_key);
+    if ($item && $item['ts'] > $_expires) {
+        return $item['item'];
+    }
+    return null;
 }
 
 /**
@@ -196,7 +221,12 @@ function kval_get($key, $expires = null)
  */
 function kval_set($key, $value)
 {
-    return driver_call('kval', 'set', [$key, $value]);
+    $_key = kval_key($key);
+    $item = array(
+        'item' => $value,
+        'ts'   => time(),
+    );
+    return kval_set_item($_key, $item);
 }
 
 /**
@@ -212,8 +242,65 @@ function kval_set($key, $value)
  */
 function kval_value($key, $expires, callable $generate)
 {
-    return driver_call('kval', 'value', [$key, $expires, $generate]);
+    $_key = kval_key($key);
+    $_expires = kval_expires($expires);
+
+    $existing = kval_get_item($_key);
+    if ($existing && $existing['ts'] > $_expires) {
+        return $existing['item'];
+    }
+    $value = call_user_func($create);
+    if (is_null($value)) {
+        if ($existing) {
+            $existing['ts'] = time();
+            kval_set_item($_key, $existing);
+            return $existing['item'];
+        }
+        return null;
+    }
+    kval_set_item($_key, array('item' => $value, 'ts' => time()));
+    return $value;
 }
 
+
+//----------------------------------------------------------------------------//
+//-- Private functions                                                      --//
+//----------------------------------------------------------------------------//
+
+/**
+ * Get the complete option, with timestamp
+ *
+ * @param string $key
+ * @param int $expires_ts
+ *
+ * @return null|array('item' => mixed, 'ts' => (integer))
+ */
+function kval_get_item($key)
+{
+    return driver_call('kval', 'get_item', [$key]);
+}
+
+/**
+ * Set the complete option, with timestamp
+ *
+ * @param string $key
+ * @param array $item['item', 'ts']
+ *
+ * @return null
+ */
+function kval_set_item($key, $item)
+{
+    return driver_call('kval', 'set_item', [$key, $item]);
+}
+
+/**
+ * Delete a value if it exists
+ *
+ * @param string $key
+ */
+function kval_delete($key)
+{
+    return driver_call('kval', 'delete', [$key]);
+}
 
 

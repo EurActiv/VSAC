@@ -10,10 +10,17 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function shortener_depends()
+{
+    return driver_call('shortener', 'depends');
+}
+
+
 /** @see example_module_config_items() */
 function shortener_config_items()
 {
-    return array(
+    return array_merge(array(
         [
             'shortener_driver',
             '',
@@ -30,7 +37,7 @@ function shortener_config_items()
             'The API key for the shortener',
             true,
         ]
-    );
+    ), driver_call('shortener', 'config_items'));
 }
 
 /** @see example_module_sysconfig() */
@@ -57,6 +64,11 @@ function shortener_test()
     force_conf('shortener_base_url', $base);
     force_conf('shortener_api_key', $api_key);
     force_conf('http_allowed_domains', ['example.com']);
+
+    $driver_test = driver_call('shortener', 'test');
+    if ($driver_test !== true) {
+        return $driver_test;
+    }
 
     $long = 'http://www.example.com/';
     $short = shortener_shorten($long);

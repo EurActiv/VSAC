@@ -7,21 +7,46 @@ use_module('backend-all');
 
 auth_require_authenticated();
 
-$test_module = function ($module, $driver = null) {
+$test_results = array();
+
+$test_module = function ($module, $driver = null) use (&$test_results, &$test_module) {
     use_module($module);
     if ($driver) {
         driver($module, $driver);
+    } else {
+        driver($module, $module . '-noop');
     }
-    $fn = request_query('test', 'system') == 'modules' ? '_test' : '_sysconfig';
-    $fn = __NAMESPACE__ . '\\' . str_replace('-', '_', $module) . $fn;
+    $key = $module . '.' . $driver;
+    if (isset($test_results[$key])) {
+        return $test_results[$key];
+    }
+
+    $base_fn = __NAMESPACE__ . '\\' . str_replace('-', '_', $module);
+
+    $test_results[$key] = true; // avoid infinite loops in circular deps
+    $deps_fn = $base_fn . '_depends';
+    $deps = call_user_func($deps_fn);
+    foreach ($deps as $dep) {
+        $dep_result = $test_module($dep);
+        if ($dep_result !== true) {
+            $test_results[$key] = sprintf('Dependency failed: %s (%s)', $dep, $dep_result);
+            return $dep_result;
+        }
+    }
+
+    $fn = $base_fn . (request_query('test', 'system') == 'modules' ? '_test' : '_sysconfig');
 
     $result = call_user_func($fn);
+    if (!$result) {
+        $result = 'Unknown failure';
+    }
+    $test_results[$key] = $result;
     if ($driver) {
         driver($module, null);
     }
     force_conf_clear();
 
-    return $result ? $result : 'Unknown failure';
+    return $result;
 };
 
 $test_app = function () {

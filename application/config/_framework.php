@@ -16,11 +16,14 @@ $config = array(
     ),
 
     // default configuration for error handling
-    'error_driver' => 'sqliteerror',
+    'error_driver' => 'sqlite',
+
     // default configuration for call map logging
-    'callmap_driver' => 'fscallmap',
-    'callmap_labels' => array(),
+    'callmap_driver'            => 'noop',
+    'callmap_labels'            => array(),
     'callmap_visualize_default' => array(),
+    'callmap_probability'       => 1000,
+
     // default configuration of apikey module
     'api_key'        => 'keyboard_cat',
 
@@ -35,17 +38,15 @@ $config = array(
 
     // default configuration of cache abstraction layer (cal) module
     'cal_ttl'    => 60 * 60,                 // 1 hour
-    'cal_quota'  => 1.0 * 1024 * 1024 * 128, // 128MB
-    'cal_driver' => 'sqlitecache',
+    'cal_driver' => 'noop',
 
 
     // default configuration of key-value store (kval) module
     'kval_ttl'    => (int) (60 * 60),            // 1 hour
-    'kval_quota'  => (float) (1024 * 1024 * 64), // 64MB
-    'kval_driver' => 'sqlitekv',
+    'kval_driver' => 'noop',
 
     // default configuration of the URL shortener module
-    'shortener_driver'   =>  'noshorten',
+    'shortener_driver'   =>  'noop',
     'shortener_base_url' =>  '',
     'shortener_api_key'  =>  '', 
 

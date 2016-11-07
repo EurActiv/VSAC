@@ -6,6 +6,13 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function request_depends()
+{
+    return array();
+}
+
+
 /** @see example_module_config_items() */
 function request_config_items()
 {

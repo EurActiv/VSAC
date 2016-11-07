@@ -11,23 +11,7 @@ namespace VSAC;
 //----------------------------------------------------------------------------//
 
 
-set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-    use_module('error');
-    $trace = debug_backtrace();
-    error_handle_error($errno, $errstr, $errfile, $errline, $trace);
-    return true;
-});
 
-set_exception_handler(function ($ex) {
-    use_module('error');
-    error_handle_error(
-        $ex->getCode(),
-        $ex->getMessage(),
-        $ex->getFile(),
-        $ex->getLine(),
-        $ex->getTrace()
-    );
-});
 
 //----------------------------------------------------------------------------//
 //-- bootstrapping                                                          --//
@@ -67,7 +51,6 @@ function bootstrap_web($debug = false)
     use_module('request');
     use_module('response');
     use_module('front-controller');
-    use_module('callmap');
 }
 
 /**
@@ -83,9 +66,30 @@ function bootstrap_cli()
     add_include_path(__DIR__);
     use_module('filesystem');
     use_module('cli');
-
 }
 
+/**
+ * Set up error handling, has to happen after plugins are bootstrapped
+ */
+function set_error_handling() {
+    set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+        use_module('error');
+        $trace = debug_backtrace();
+        error_handle_error($errno, $errstr, $errfile, $errline, $trace);
+        return true;
+    });
+
+    set_exception_handler(function ($ex) {
+        use_module('error');
+        error_handle_error(
+            $ex->getCode(),
+            $ex->getMessage(),
+            $ex->getFile(),
+            $ex->getLine(),
+            $ex->getTrace()
+        );
+    });
+}
 
 //----------------------------------------------------------------------------//
 //-- utilities                                                              --//
@@ -181,6 +185,20 @@ function &superglobal($name, $override = null)
         case 'request'  : return $_REQUEST  ;
         case 'env'      : return $_ENV      ;
     }
+}
+
+/**
+ * Get a version from a program installed on the system
+ *
+ * @param string $cmd the command to run to get the version (eg, uglifyjs --version)
+ *
+ * @return string the version number or '0' if not found
+ */
+function extract_version($cmd)
+{
+    exec($cmd, $out);
+    $version = array_shift($out);
+    return $version ? preg_replace('/[^\.\d]/', '', $version) : '0';
 }
 
 //----------------------------------------------------------------------------//
@@ -447,8 +465,16 @@ function used_modules($name = null)
  */
 function use_module($name)
 {
-    used_modules($name);
-    require_once 'modules/inc-' . $name . '.php';
+    static $used = array();
+    if (!isset($used[$name])) {
+        used_modules($name);
+        $used[$name] = true;
+        require_once 'modules/inc-' . $name . '.php';
+        $deps_fn = __NAMESPACE__ . '\\' . str_replace('-', '_', $name) . '_depends';
+        foreach ($deps_fn() as $dep) {
+            use_module($dep);
+        }
+    }
 }
 
 
@@ -480,7 +506,7 @@ function driver($module, $force_driver = false)
 
     if ($force_driver) {
         if (isset($drivers[$module]) && $drivers[$module] != $force_driver) {
-            unset($drivers[$driver]);
+            unset($drivers[$module]);
         }
         if (empty($drivers[$module])) {
             force_conf($driver_option, $force_driver);
@@ -490,7 +516,10 @@ function driver($module, $force_driver = false)
     if (empty($drivers[$module])) {
         $driver = config($driver_option, '');
         $drivers[$module] = $driver;
-        require_once 'modules/' . $module . '-drivers/' . $driver . '.php';
+        $file = 'modules/' . $module . '-drivers/' . $module . '-' . $driver . '.php';
+        if ($file = stream_resolve_include_path($file)) {
+            include_once $file;
+        }
     }
     return $drivers[$module];
 }
@@ -503,8 +532,8 @@ function driver($module, $force_driver = false)
 function drivers($module)
 {
     $drivers = scan_include_dirs('modules/' . $module . '-drivers');
-    $drivers = array_map(function ($file) {
-        $regex = '/^([a-z0-9\-]+)\.php$/';
+    $drivers = array_map(function ($file) use($module) {
+        $regex = '/^'. preg_quote($module) .'\-([a-z0-9\-]+)\.php$/';
         return preg_match($regex, $file, $m) ? $m[1] : false;
     }, $drivers);
 
@@ -515,14 +544,16 @@ function drivers($module)
  * Pass a function call through to a module driver
  *
  * @param string $module the module to call the driver from
- * @param string $fn the function, to which __NAMESPACE__ . '\\' . $driver . '_'
- * will be prepended
+ * @param string $function the function, to which
+ * __NAMESPACE__ . '\\' . $driver . '_' will be prepended
  * @param array $args arguments to pass to the underlying driver function
  * @return mixed the results of the called method
  */
-function driver_call($module, $fn, array $args = array())
+function driver_call($module, $function, array $args = array())
 {
-    $fn = __NAMESPACE__ . '\\' . str_replace('-', '_', driver($module)) . '_' . $fn;
+    $fn = __NAMESPACE__
+        . '\\' . str_replace('-', '_', $module . '_' . driver($module))
+        . '_' . $function;
     return call_user_func_array($fn, $args);
 }
 
@@ -658,7 +689,7 @@ function conf_check_type($plugin, $name, $value, $default)
  */
 function conf_config($plugin, $name, $default)
 {
-    $config = conf_load($plugin);
+    $config = conf_load($plugin == '_framework' ? 'framework' : $plugin);
     if (!isset($config[$name])) {
         conf_err($plugin, $name, 'Offset not set or NULL');
     }
@@ -678,7 +709,7 @@ function conf_config($plugin, $name, $default)
  */
 function conf_option($plugin, $name, $default)
 {
-    $config = conf_load($plugin);
+    $config = conf_load($plugin == '_framework' ? 'framework' : $plugin);
     $value = isset($config[$name]) ? $config[$name] : $default;
     conf_check_type($plugin, $name, $value, $default);
     return $value;
@@ -735,6 +766,8 @@ function bootstrap_plugin($plugin)
     } else {
         define('VSAC_PLUGIN', $plugin);
     }
+    set_error_handling();
+    use_module('callmap');
     if ($plugin !== '_framework') {
         $functions = 'plugins/' . $plugin . '/functions.php';
         if (!stream_resolve_include_path($functions)) {
@@ -754,7 +787,7 @@ function plugin()
 {
     $plugin =  @constant('VSAC_PLUGIN');
     if (!$plugin) {
-        err('No plugin bootsrapped');
+        err('No plugin bootstrapped');
     }
     return $plugin;
 }

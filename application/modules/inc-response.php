@@ -12,6 +12,12 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function response_depends()
+{
+    return array('filesystem', 'request', 'router');
+}
+
 /** @see example_module_config_items() */
 function response_config_items()
 {

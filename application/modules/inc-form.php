@@ -10,6 +10,13 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function form_depends()
+{
+    return array('backend', 'auth', 'request');
+}
+
+
 /** @see example_module_config_items() */
 function form_config_items()
 {
@@ -61,7 +68,7 @@ function form_form(array $attributes, callable $content, callable $process = nul
     ) {
         auth_check_csrf_token();
         if ($results = call_user_func($process)) {
-            if ($results == '__backend_flashbag_response') {
+            if ($results === '__backend_flashbag_response') {
                 echo '<script>location.replace(location.href)</script>';
                 die();
             }
@@ -92,8 +99,9 @@ function form_form(array $attributes, callable $content, callable $process = nul
  *
  * @return void
  */
-function form_selectbox(array $options, $selected, $label, $name, $id)
+function form_selectbox(array $options, $selected, $label, $name, $id = false)
 {
+    $id = form_control_id($name, $id);
     echo '<div class="form-group">';
     if ($label) echo sprintf(
         '<label for="%s">%s</label> ',
@@ -126,8 +134,9 @@ function form_selectbox(array $options, $selected, $label, $name, $id)
  *
  * @return void
  */
-function form_checkbox($checked, $label, $name, $id)
+function form_checkbox($checked, $label, $name, $id = false)
 {
+    $id = form_control_id($name, $id);
     echo '<div class="checkbox"><label>';
     echo sprintf(
         '<input type="checkbox" name="%s" id="%s"%s value="1"> %s',
@@ -150,8 +159,9 @@ function form_checkbox($checked, $label, $name, $id)
  *
  * @return void
  */
-function form_textbox($value, $label, $name, $id, $type = 'text')
+function form_textbox($value, $label, $name, $id = false, $type = 'text')
 {
+    $id = form_control_id($name, $id);
     echo '<div class="form-group">';
     if ($label) echo sprintf('<label for="%s">%s</label>', $name, $label);
     echo sprintf(
@@ -189,8 +199,9 @@ function form_submit($faux_label = false, $label = 'Submit')
  * @param string $name the control name
  * @param string $id the control id 
  */
-function form_hidden($value, $name, $id)
-{    
+function form_hidden($value, $name, $id = false)
+{
+    $id = form_control_id($name, $id);
     echo sprintf(
         '<input type="hidden" id="%s" name="%s" value="%s">',
         $id,
@@ -208,8 +219,9 @@ function form_hidden($value, $name, $id)
  * @param string $name the control name
  * @param string $id the control id 
  */
-function form_file($max, $label, $name, $id)
+function form_file($max, $label, $name, $id = false)
 {
+    $id = form_control_id($name, $id);
     echo '<div class="form-group">';
     form_hidden($max, 'MAX_FILE_SIZE', $id . '-max-size');
     if ($label) echo sprintf('<label for="%s">%s</label>', $name, $label);
@@ -344,5 +356,26 @@ function form_handle_upload_cb($error, $tmp_name, $name, callable $process)
     }
     return call_user_func($process, $tmp_name, basename($name));
 
+}
+
+/**
+ * Get a form control ID, defaulting to name, warn if the ID is not unique
+ *
+ * @param string $name the name as set in the form control
+ * @param string|false $id the id as set in the form control field
+ *
+ * @return string the control id to use
+ */
+function form_control_id($name, $id)
+{
+    static $used_ids = array();
+    if (!$id) {
+        $id = $name;
+    }
+    if (in_array($id, $used_ids)) {
+        err("Non-unique form id '$id'");
+    }
+    $used_ids[] = $id;
+    return $id;
 }
 

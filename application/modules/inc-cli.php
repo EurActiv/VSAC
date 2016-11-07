@@ -13,6 +13,12 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function cli_depends()
+{
+    return array();
+}
+
 /** @see example_module_config_items() */
 function cli_config_items()
 {

@@ -10,6 +10,12 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function filesystem_depends()
+{
+    return array();
+}
+
 /** @see example_module_config_items() */
 function filesystem_config_items()
 {
@@ -28,7 +34,7 @@ function filesystem_sysconfig()
 /** @see example_module_test() */
 function filesystem_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 
@@ -87,6 +93,33 @@ function filesystem_safename($name)
         $prefix = 'safename';
     }
     return $prefix . '-' . $crc_full . '-' . $safename;
+}
+
+/**
+ * Get the path to a minified file from the non-minified file. The source file
+ * must exist and must not already be minified; the minified path may not
+ * exist (needs to be created).
+ *
+ * @param string $abspath the absolute path to the source file
+ *
+ * @return string the path to the (perhaps notional) minified file
+ */
+function filesystem_minified_path($path, $expected_ext = false)
+{
+    if (!($abspath = filesystem_realpath($path))) {
+        err('Source file does not exist: '.$path);
+    }
+    if (!is_file($abspath) || !($ext = pathinfo($abspath, PATHINFO_EXTENSION))) {
+        err('Source file is not minifiable: '.$abspath);
+    }
+    if ($expected_ext && strtolower($ext) != strtolower($expected_ext)) {
+        err("Source file is not .{$expected_ext}: " . $path);
+    }
+    $base = substr($abspath, 0, (-1 * (strlen($ext) + 1)));
+    if (substr($base, -4) == '-min') {
+        err('Path is already a minified path: '.$path);
+    }
+    return $base . '-min.' . $ext;
 }
 
 /**

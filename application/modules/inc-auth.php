@@ -10,6 +10,13 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function auth_depends()
+{
+    return array('backend', 'request', 'response', 'router');
+}
+
+
 /** @see example_module_config_items() */
 function auth_config_items()
 {

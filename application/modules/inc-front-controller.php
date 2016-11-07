@@ -6,13 +6,15 @@
 
 namespace VSAC;
 
-use_module('filesystem');
-use_module('response');
-use_module('callmap');
-
 //----------------------------------------------------------------------------//
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
+
+/** @see example_module_dependencies() */
+function front_controller_depends()
+{
+    return array('filesystem', 'response');
+}
 
 /** @see example_module_config_items() */
 function front_controller_config_items()
@@ -163,6 +165,9 @@ function front_controller_discharge($controller_path)
                 array_pop($file);
             }
             if (!empty($file)) {
+                // note: must load late because it uses a driver and therefore
+                // requires configuration from the plugins
+                use_module('callmap');
                 callmap_log(implode('/', $file));
             }
         }

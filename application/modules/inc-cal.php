@@ -34,6 +34,12 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function cal_depends()
+{
+    return driver_call('cal', 'depends');
+}
+
 /** @see example_module_config_items() */
 function cal_config_items()
 {
@@ -43,13 +49,9 @@ function cal_config_items()
             0,
             'The time, in seconds, to cache items before revalidating'
         ], [
-            'cal_quota',
-            0.0,
-            'The size, in bytes, to allow the cache to grow to'
-        ], [
             'cal_driver',
             '',
-            'The cache driver to use, either "fscache" or "sqlitecache"'
+            'The cache driver to use, either "fs" or "sqlite" or "noop"'
         ],
     );
 }
@@ -64,7 +66,6 @@ function cal_sysconfig()
 function cal_test()
 {
     force_conf('cal_ttl', 2);
-    force_conf('cal_quota', 1024 * 1024);
     $item_key = 'test_' . time();
     $item_value = md5($item_key);
     $permutation_value1 = md5($item_value);
@@ -125,7 +126,7 @@ function cal_size()
 }
 
 /**
- * Clean the database and enforce disc quota
+ * Clean the database
  *
  * @return array timestamps of last clean and last invalidate
  */
@@ -149,24 +150,21 @@ function cal_status($clean_url)
     backend_collapsible('Cache', function () use ($clean_url) {
 
         $size = backend_format_size(cal_size());
-        $quota = backend_format_size(config('cal_quota', 0.0));
         $last_invalidate = cal_get_meta('last_invalidate');
         $last_vacuum = cal_get_meta('last_vacuum');
         $interval = time() - (60 * 60 * 24);
         $is_cleaned = ($last_invalidate > $interval) && ($last_vacuum > $interval);
         $clean_url = router_plugin_url($clean_url, true);
 
-
         ?>
         <p>The database that powers this API is currently using
-            <code><?= $size ?></code>. The configured disk quota is
-            <code><?= $quota ?></code>.<p>
+            <code><?= $size ?></code>.<p>
         <p>Expired items were last cleaned from the cache
             <?= backend_format_time_ago($last_invalidate) ?>. The database was
             last vacuumed <?= backend_format_time_ago($last_vacuum) ?>.</p>
-        <p>To ensure that the database is regularly cleaned to respect quotas,
-            make sure the following line is in your cron tab (adjusting the
-            frequency to your needs):</p>
+        <p>To ensure that the database is regularly cleaned, make sure the
+            following line is in your cron tab (adjusting the frequency to your
+            needs):</p>
         <pre><code>/15 * * * wget -q -O - <?= $clean_url ?></code></pre>
         <p class="text-right">
             Driver: <?= driver('cal') ?> |
@@ -227,7 +225,8 @@ function cal_set_meta($name, $value)
  */
 function cal_get_item($identifier, callable $refresh)
 {
-    return driver_call('cal', 'get_item', [$identifier, $refresh]);
+    $item_id = cal_get_item_id($identifier, $refresh);
+    return cal_get_item_content($item_id);
 }
 
 /**
@@ -247,12 +246,196 @@ function cal_get_permutation(
     $permutation_identifier,
     callable $refresh_permutation
 ) {
-    return driver_call('cal', 'get_permutation', [
-        $item_identifier,
-        $refresh_item,
-        $permutation_identifier,
-        $refresh_permutation
-    ]);
+    if (!($item_id = cal_get_item_id($item_identifier, $refresh_item))) {
+        return null;
+    }
+    $permutation = cal_get_permutation_content($item_id, $permutation_identifier);
+    if (!is_null($permutation)) {
+        return $permutation;
+    }
+    $item = cal_get_item_content($item_id);
+    if (is_null($item)) {
+        return null;
+    }
+    $permutation = call_user_func($refresh_permutation, $item);
+    if (is_null($permutation)) {
+        return null;
+    }
+    cal_insert_permutation($item_id, $permutation_identifier, $permutation);
+    return $permutation;
 }
+
+
+//----------------------------------------------------------------------------//
+//-- Private functions                                                      --//
+//----------------------------------------------------------------------------//
+
+/**
+ * Similar to cal_get_item(), but returns the record unique identifier for the
+ * underlying cache layer instead of the entire row
+ *
+ * @private
+ *
+ * @param string $identifier @see cal_get_item()
+ * @param callable $refresh @see cal_get_item()
+ *
+ * @return the underlying cache layer's unique id for the item
+ */
+function cal_get_item_id($identifier, callable $refresh)
+{
+    $meta = cal_get_item_meta($identifier);
+
+    if ($meta && (!$meta['expire'] || $meta['expire'] >= time())) {
+        return $meta['id'];
+    }
+    $content = call_user_func($refresh, $identifier);
+
+    if ($content === null) { // error handling
+        // if there's an old item just touch it on error
+        if ($meta) {
+            return cal_touch_item($meta['id']);
+        }
+        // cache error state for 5 minutes to let the source cool off
+        $item_id = cal_insert_item($identifier, null);
+        return cal_touch_item($item_id, 60 * 5);
+    }
+
+    // if there's an old item but it hasn't changed, avoid inserting new
+    // items because that will cause all the permutations to recalculate
+    if ($meta) {
+        $old_content = cal_get_item_content($meta['id']);
+        if ($old_content === $content) {
+            return cal_touch_item($meta['id']);
+        }
+    }
+
+    // At this point, we can just insert the item
+    $item_id = cal_insert_item($identifier, $content);
+    return cal_touch_item($item_id);
+}
+
+
+/**
+ * "Touch" an item, that is make it as if it is fresh now
+ *
+ * @private
+ *
+ * @param integer $item_id the cache layer's unique id for the item
+ * @param integer $expire expires in this many seconds, defaults to global config
+ *
+ * @return void
+ */
+function cal_touch_item($item_id, $expire = null)
+{
+    if (is_null($expire)) {
+        $expire = config('cal_ttl', 0);
+    }
+    if ($expire) {
+        $now = (int) time();
+        $invalidate = $now + ($expire * 2);
+        $expire = $now + $expire;
+    } else {
+        $invalidate = 0;
+    }
+    cal_touch($item_id, $expire);
+    return $item_id;
+}
+
+/**
+ * Get the meta for a an item in the cache layer, if it exists
+ *
+ * @param string $identifier the identifier for the item
+ *
+ * @return array['id' => unique id, 'expires' => timestamp]
+ */
+function cal_get_item_meta($identifier)
+{
+    return driver_call('cal', 'get_item_meta', [$identifier]);
+}
+
+
+/**
+ * Insert an item in the database
+ *
+ * @private
+ *
+ * @param string $identifier @see cal_get_item()
+ * @param mixed $content anything that can be serialized
+ * @return mixed driver specific item id
+ */
+function cal_insert_item($identifier, $content, $expire = null)
+{
+    return driver_call('cal', 'insert_item', [$identifier, $content, $expire]);
+}
+
+/**
+ * Execute the actual item touch from cal_touch_item()
+ *
+ * @private
+ *
+ * @param string $item_id @see cal_touch_item()
+ * @param integer $expire expire the item in seconds
+ * @return void
+ */
+function cal_touch($item_id, $expire)
+{
+    return driver_call('cal', 'touch', [$item_id, $expire]);
+}
+
+
+/**
+ * Get the unserialized content of an item
+ *
+ * @private
+ *
+ * @param string $item_id the data layer's unique id for the item
+ * @return mixed
+ */
+function cal_get_item_content($item_id)
+{
+    return driver_call('cal', 'get_item_content', [$item_id]);
+}
+
+
+//-- Permutations ------------------------------------------------------------//
+
+
+/**
+ * Get the unserialized content of a permutation
+ *
+ * @private
+ *
+ * @param string $item_id data layer's unique id for the item
+ * @param string $permutation_identifier the caller identifier for the permutation
+ * @return mixed
+ */
+function cal_get_permutation_content($item_id, $permutation_identifier)
+{
+    return driver_call(
+        'cal',
+        'get_permutation_content',
+        [$item_id, $permutation_identifier]
+    );
+}
+
+
+/**
+ * Insert permutation content in the database
+ *
+ * @private
+ *
+ * @param string $item_id data layer's unique id for the item
+ * @param string $permutation_identifier the caller identifier for the permutation
+ * @return void
+ */
+function cal_insert_permutation($item_id, $permutation_identifier, $permutation)
+{
+    return driver_call(
+        'cal',
+        'insert_permutation',
+        [$item_id, $permutation_identifier, $permutation]
+    );
+}
+
 
 

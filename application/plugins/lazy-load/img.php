@@ -5,7 +5,7 @@ namespace VSAC;
 $parameters = lazy_load_get_parameters($error);
 
 if ($error) {
-    http_response_code(400, $error);
+    http_response_code(400);
     lazy_load_placeholder($parameters['aspect']);
 }
 

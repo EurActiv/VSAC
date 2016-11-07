@@ -10,6 +10,13 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function image_depends()
+{
+    return array();
+}
+
+
 /** @see example_module_config_items() */
 function image_config_items()
 {
@@ -31,7 +38,7 @@ function image_sysconfig()
 /** @see example_module_test() */
 function image_test()
 {
-    return 'No tests to run';
+    return true;
 }
 
 
@@ -39,6 +46,60 @@ function image_test()
 //-- Public API                                                             --//
 //----------------------------------------------------------------------------//
 
+/**
+ * Similar to getimagesize, but also works on blobs. Always returns array, if
+ * there was an error, elements are set to 0 or empty string
+ *
+ * @param string $image either the absolute path to the image on disk or the
+ * blob
+ *
+ * @return array['width'=>int,'height'=>int,'mime'=>string]
+ */
+function image_info($image)
+{
+    // http://stackoverflow.com/a/2756441/1459873
+    $is_path = preg_match('#^(\w+/){1,2}\w+\.\w+$#', $image);
+    if ($is_path && false !== ($info = getimagesize($image))) {
+        return array(
+            'width' => $info[0],
+            'height' => $info[1],
+            'mime' => $info['mime'],
+            'type' => 'file',
+        );
+    }
+    $im = new \Imagick();
+    if ($im->readImageBlob($image)) {
+        return array(
+            'width'  => $im->getImageWidth(),
+            'height' => $im->getImageHeight(),
+            'mime'   => $im->getImageMimeType(),
+            'type'   => 'blob',
+        );
+    }
+    return array('width' => 0, 'height' => 0, 'mime'=>'', 'type' => '');
+
+}
+
+/**
+ * Get a data uri for an image
+ *
+ * @param string $image either the path to to the image on disk or an image blob
+ */
+function image_data_uri($image, $max_width = 0)
+{
+    $info = image_info($image);
+    if (!$info['type']) {
+        return $image;
+    }
+    if ($info['type'] == 'file') {
+        $image = file_get_contents($image);
+    }
+    if ($max_width && $max_width < $info['width']) {
+        $image = image_scale_blob($image, $info, $max_width, 'crop');
+        $info = image_info($image);
+    }
+    return sprintf('data:%s;base64,%s', $info['mime'], base64_encode($image));
+}
 
 /**
  * Use ImageMagick to make a sprite.

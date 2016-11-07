@@ -10,6 +10,15 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function callmap_depends()
+{
+    return array_merge(
+        driver_call('callmap', 'depends'),
+        array('request')
+    );
+}
+
 /** @see example_module_config_items() */
 function callmap_config_items()
 {
@@ -17,7 +26,7 @@ function callmap_config_items()
         [
             'callmap_driver',
             '',
-            'The callmap driver to use, either "sqlitecallmap" or "noopcallmap"'
+            'The callmap driver to use, either "sqlite", "fsstore" or "noop"'
         ], [
             'callmap_labels',
             array(),
@@ -29,6 +38,11 @@ function callmap_config_items()
             array(),
             'Nodes to visualize by default',
             true
+        ], [
+            'callmap_probability',
+            1,
+            'Probability that a given hit will log. Important for high traffic
+             sites. Set higher for lower probability.'
         ]
     );
 }
@@ -63,6 +77,10 @@ function callmap_test()
  */
 function callmap_log($provider, $consumer = null, $gateway = null)
 {
+    $probability = config('callmap_probability', 0);
+    if (rand(0, $probability)) {
+        return;
+    }
     $provider = callmap_normalize_label($provider);
 
     if (!$consumer) {

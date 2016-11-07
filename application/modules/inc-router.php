@@ -10,6 +10,12 @@ namespace VSAC;
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
 
+/** @see example_module_dependencies() */
+function router_depends()
+{
+    return array('filesystem', 'request');
+}
+
 /** @see example_module_config_items() */
 function router_config_items()
 {
@@ -104,11 +110,84 @@ function router_add_query($url, array $qp = array())
         parse_str($query_str, $old_qp);
         $qp = array_merge($old_qp, $qp);
     }
+    $qp = array_filter($qp, function ($v) {
+        return !is_null($v);
+    });
     if (!empty($qp)) {
         $url .= '?' . http_build_query($qp, null, '&', PHP_QUERY_RFC3986);
     }
     return $url;
 }
+
+/**
+ * Rebase a relative to make it an absolute url. Will also handle switching
+ * between having the scheme on or off for https? requests.
+ *
+ * @param string $uri the url to rebase
+ * @param string $base_url the base url, will default to this application
+ * @param null|bool $with_scheme true: will have scheme added; false: will have
+ * scheme removed; null: won't touch scheme
+ *
+ * @return string the rebased url
+ */
+function router_rebase_url($uri, $base_url = null, $with_scheme = null)
+{
+    $match_scheme = function ($u) use ($with_scheme) {
+        if (is_null($with_scheme)) {
+            return $u;
+        }
+        if ($with_scheme && strpos($u, '//') === 0) {
+            return router_scheme() .  $u;
+        }
+        if (!$with_scheme && preg_match('#^(https?:)//#i', $u, $m)) {
+            return substr($u, strlen($m[1]));
+        }
+        return $u;
+    }; 
+
+    // check for fully qualified URIs, data/javascript URIs...
+    if (preg_match('#^([a-z\-]+:)?#i', $uri, $m)) {
+        $scheme = empty($m[1]) ? 'http:' : strtolower($m[1]);
+        // don't touch non http (eg, data uris)
+        if ($scheme != 'http:' && $scheme != 'https:') {
+            return $uri;
+        }
+        return $match_scheme($uri);
+    }
+
+    // make sure the base url is ok
+    $base_url = empty($base_url)
+              ? router_base_url((bool) $with_scheme)
+              : $match_scheme($base_url)
+              ;
+    if (substr($base_url, -1) != '/') {
+        $base_url .= '/';
+    }
+    if (preg_match('#^(https?:)?(//[^/]+)(/.*)#', $base_url, $m)) {
+        $domain = $m[1] . $m[2];
+        $path = $m[3];
+    } else {
+        $domain = '';
+        $path = $base_url;
+    }
+
+    // paths from document root
+    if (strpos($uri, '/') === 0) {
+        return $domain . $uri;
+    }
+    // relative urls
+    $uri = array_filter(explode('/', $path . $uri));
+    $path = array();
+    while (null !== ($u = array_shift($uri))) {
+        if ($u == '..') {
+            array_pop($path);
+        } elseif ($u != '.') {
+            $path[] = $u;
+        }
+    }
+    return $domain . '/' . implode('/', $path);
+}
+
 
 /**
  * Get a route to a location within a plugin.

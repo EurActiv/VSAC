@@ -11,11 +11,15 @@
 
 namespace VSAC;
 
-use_module('backend-all');
-
 //----------------------------------------------------------------------------//
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
+
+/** @see example_module_dependencies() */
+function version_depends()
+{
+    return array('auth', 'docs', 'filesystem', 'form', 'request', 'router');
+}
 
 /** @see example_module_config_items() */
 function version_config_items()

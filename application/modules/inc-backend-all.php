@@ -7,15 +7,16 @@
 
 namespace VSAC;
 
-use_module('backend');
-use_module('docs');
-use_module('form');
-use_module('build');
-use_module('auth');
-
 //----------------------------------------------------------------------------//
 //-- Framework required functions                                           --//
 //----------------------------------------------------------------------------//
+
+/** @see example_module_dependencies() */
+function backend_all_depends()
+{
+    return array('backend', 'docs', 'form', 'build', 'auth');
+}
+
 
 /** @see example_module_config_items() */
 function backend_all_config_items()
