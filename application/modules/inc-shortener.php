@@ -70,14 +70,14 @@ function shortener_test()
         return $driver_test;
     }
 
-    $long = 'http://www.example.com/';
+    $long = 'http://www.example.com/' . uniqid();
     $short = shortener_shorten($long);
 
     if (!filter_var($short, FILTER_VALIDATE_URL)) {
         return 'Shortener did not return valid URL';
     }
 
-    if ($driver != 'noshorten' && $long == $short) {
+    if ($driver != 'noop' && $long == $short) {
         return 'Url did not get shortened';
     }
     return true;
