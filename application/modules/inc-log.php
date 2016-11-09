@@ -111,7 +111,6 @@ function log_log($message)
     $message = log_format_message($prefix, func_get_args());
     $file = log_get_file();
     file_put_contents($file, $message . "\n", FILE_APPEND|LOCK_EX);
-    return $log_id;
 }
 
 function log_file_viewer()

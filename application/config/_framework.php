@@ -35,6 +35,7 @@ $config = array(
         'httpbin.org',
         'example.com',
     ),
+    'http_connect_timeout' => 15,
 
     // default configuration of cache abstraction layer (cal) module
     'cal_ttl'    => 60 * 60,                 // 1 hour

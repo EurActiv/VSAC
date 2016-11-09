@@ -34,6 +34,12 @@ function http_config_items()
             fetching assets or generating URLs',
             true,
         ],
+        [
+            'http_connect_timeout',
+            0,
+            'The amount of time, in seconds, that cURL should wait before
+            returning an error status. 15 is a good value for most cases.'
+        ],
     );
 }
 
@@ -230,11 +236,12 @@ function http_examples_in_config($domains = array(), $urls = array())
 function http_get_curl_handle($url, $googlebot = false, array $options = array())
 {
     $ch = curl_init($url);
+    $timeout = config('http_connect_timeout', 0);
     // limit time messing around with transfer
     $_options = array(
         // limit connection time
-        CURLOPT_CONNECTTIMEOUT      => 15,
-        CURLOPT_TIMEOUT             => 15,
+        CURLOPT_CONNECTTIMEOUT      => $timeout,
+        CURLOPT_TIMEOUT             => $timeout,
         // limit size of transfer to 32MB
         // see http://stackoverflow.com/a/17642638/1459873
         CURLOPT_BUFFERSIZE          => 128,
