@@ -29,16 +29,16 @@ if (!auth_is_authenticated()) {
                 $files = array_keys(logos_list_files());
                 $files = array_combine($files, $files);
                 echo '<div class="row"><div class="col-sm-11">';
-                form_selectbox($files, 0, '', 'file', 'file'); 
+                form_selectbox($files, 0, '', 'remove_file', 'remove_file'); 
                 echo '</div><div class="col-sm-1">';
                 form_submit();
                 echo '</div></div>';
             },
             function () {
-                $name = basename(request_post('file'));
+                $name = basename(request_post('remove_file'));
                 $file = filesystem_files_path() . 'files/' . $name;
                 $desc = filesystem_files_path() . 'desc/' . $name . '.txt';
-                if (!file_exists($file)) {
+                if (!file_exists($file) || !is_file($file)) {
                     return form_flashbag('Could not find file ' . $name);
                 }
                 unlink($file);
@@ -58,21 +58,21 @@ if (!auth_is_authenticated()) {
                 $files = array_keys(logos_list_files());
                 $files = array_combine($files, $files);
                 echo '<div class="row"><div class="col-sm-3">';
-                form_selectbox($files, 0, 'Change', 'file', 'file');
+                form_selectbox($files, 0, 'Change', 'edit_file', 'edit_file');
                 echo '</div><div class="col-sm-8">';
-                form_textbox('', 'New Description', 'description', 'description');
+                form_textbox('', 'New Description', 'edit_description', 'edit_description');
                 echo '</div><div class="col-sm-1"><br>';
                 form_submit();
                 echo '</div></div>';
             },
             function () {
-                $name = basename(request_post('file'));
+                $name = basename(request_post('edit_file'));
                 $file = filesystem_files_path() . 'files/' . $name;
                 $desc = filesystem_files_path() . 'desc/' . $name . '.txt';
                 if (!file_exists($file)) {
                     return form_flashbag('Could not find file ' . $name, 'danger');
                 }
-                $description = request_post('description', 'No description provided');
+                $description = request_post('edit_description', 'No description provided');
                 file_put_contents($desc, $description);
                 return form_flashbag("File {$name} updated");
             }
@@ -84,15 +84,15 @@ if (!auth_is_authenticated()) {
             array('method' => 'post', 'enctype'=> "multipart/form-data"),
             function () {
                 echo '<div class="row"><div class="col-sm-3">';
-                form_file(config('max_file_size', 0), 'Select', 'file', 'file');
+                form_file(config('max_file_size', 0), 'Select', 'upload_file', 'upload_file');
                 echo '</div><div class="col-sm-8">';
-                form_textbox('', 'Description', 'description', 'description');
+                form_textbox('', 'Description', 'upload_description', 'upload_description');
                 echo '</div><div class="col-sm-1"><br>';
                 form_submit();
                 echo '</div></div>';
             },
             function () {
-                return form_handle_upload('file', function ($tmp_name, $name) {
+                return form_handle_upload('upload_file', function ($tmp_name, $name) {
                     // handle the file itself
                     $destination =  filesystem_files_path() . 'files/' . $name;
                     if (file_exists($destination)) {
@@ -104,7 +104,10 @@ if (!auth_is_authenticated()) {
                     }
                     // and the description
                     $description_path = filesystem_files_path() . 'desc/' . $name . '.txt';
-                    $description = request_post('description', 'No description provided');
+                    $description = request_post(
+                        'upload_description',
+                        'No description provided'
+                    );
                     file_put_contents($description_path, $description);
                     return form_flashbag('File uploaded');
                 });

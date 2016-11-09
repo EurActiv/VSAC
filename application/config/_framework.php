@@ -16,7 +16,7 @@ $config = array(
     ),
 
     // default configuration for error handling
-    'error_driver' => 'sqlite',
+    'error_driver' => 'noop',
 
     // default configuration for call map logging
     'callmap_driver'            => 'noop',
@@ -49,13 +49,6 @@ $config = array(
     'shortener_driver'   =>  'noop',
     'shortener_base_url' =>  '',
     'shortener_api_key'  =>  '', 
-
-
-    // testing
-    'bitly_shortener_base_url'     =>  'j.mp',
-    'bitly_shortener_api_key'      =>  '',
-    'noshorten_shortener_base_url' =>  'example.com',
-    'noshorten_shortener_api_key'  =>  'keyboard_cat',
 
 );
 
