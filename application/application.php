@@ -782,17 +782,13 @@ function framework_option($name, $default)
  */
 function bootstrap_plugin($plugin)
 {
-    if (defined('VSAC_PLUGIN')) {
-        if (constant('VSAC_PLUGIN') !== $plugin) {
-            $msg = 'Cannot bootstrap "%s", plugin "%s" already bootstrapped';
-            err(sprintf($msg, $plugin, constant('VSAC_PLUGIN')));
-        }
-    } else {
-        define('VSAC_PLUGIN', $plugin);
+    if ($plugin === '_framework') {
+        $plugin = 'framework';
     }
+    plugin($plugin);
     set_error_handling();
     use_module('callmap');
-    if ($plugin !== '_framework') {
+    if ($plugin !== 'framework') {
         $functions = 'plugins/' . $plugin . '/functions.php';
         if (!stream_resolve_include_path($functions)) {
             err('Could not resolve path to plugin');
@@ -807,9 +803,15 @@ function bootstrap_plugin($plugin)
  * Get the name of the currently declared plugin, die with error message if
  * none is bootstrapped
  */
-function plugin()
+function plugin($set_plugin = false)
 {
-    $plugin =  @constant('VSAC_PLUGIN');
+    static $plugin = null;
+    if ($set_plugin) {
+        if (!is_null($plugin)) {
+            err('Cannot set "%s", plugin "%s" already set', $set_plugin, $plugin);
+        }
+        $plugin = $set_plugin;
+    }
     if (!$plugin) {
         err('No plugin bootstrapped');
     }
@@ -909,6 +911,11 @@ function deprecated($function, $replaced_with)
  */
 function err($msg)
 {
+    $args = func_get_args();
+    $msg = count($args) > 1
+         ? call_user_func_array('sprintf', $args)
+         : array_shift($args)
+         ;
     trigger_error($msg, E_USER_ERROR);
     die(); // should be dead code, but in case the error handler has a mistake
 }

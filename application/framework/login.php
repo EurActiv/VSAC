@@ -48,7 +48,7 @@ backend_head(framework_config('app_name', '') . ' Login');
         function () {
             $user = request_post('username');
             $pass = request_post('password');
-            $users = framework_config('users', array());
+            $users = config('users', array());
             
             if ($user && isset($users[$user]) && $users[$user] === $pass) {
                 auth_set_authenticated(true);

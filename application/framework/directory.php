@@ -15,7 +15,7 @@ uasort($plugins, function ($a, $b) {
 backend_head(framework_config('app_name', ''));
 
 ?>
-<p class="well text-center"><?= framework_config('description', ''); ?></p>
+<p class="well text-center"><?= config('description', ''); ?></p>
 
 <h3>Plugins</h3>
 
@@ -29,7 +29,7 @@ backend_head(framework_config('app_name', ''));
 <?php } ?>
 </table></div>
 
-<p class="well text-center text-danger"><?= framework_config('legal', ''); ?></p>
+<p class="well text-center text-danger"><?= config('legal', ''); ?></p>
 
 <?php
 
