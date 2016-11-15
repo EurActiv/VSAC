@@ -50,19 +50,14 @@ function shortener_sysconfig()
 function shortener_test()
 {
     $driver = driver('shortener');
-
-    $base_key = $driver . '_shortener_base_url';
-    $base = option($base_key, '');
-
-    $api_key_key = $driver . '_shortener_api_key';
-    $api_key = option($api_key_key, '');
-    if (!$base || !$api_key) {
-        return sprintf('Cannot test %s unless config items %s and %s are set',
-                        $driver, $base_key, $api_key_key);
+    $test_conf_error = load_test_conf(array(
+        'shortener_base_url' => '',
+        'shortener_api_key'  => '',
+    ), $driver);
+    if ($test_conf_error) {
+        return $test_conf_error;
     }
 
-    force_conf('shortener_base_url', $base);
-    force_conf('shortener_api_key', $api_key);
     force_conf('http_allowed_domains', ['example.com']);
 
     $driver_test = driver_call('shortener', 'test');

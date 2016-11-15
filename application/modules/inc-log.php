@@ -227,6 +227,9 @@ function log_rotate_files($force = false)
     $rotated = true;
 
     $log_file = log_get_file();
+    if (!file_exists($log_file)) {
+        return;
+    }
     $log_dir = dirname($log_file);
     $max_entries = config('log_per_file', 0);
     $num_files = config('log_keep_files', 0);

@@ -594,6 +594,30 @@ function force_conf_clear()
 
 
 /**
+ * Load a testing configuration 
+ *
+ * @param array $items the config items to load, format key=>default_value
+ * @param string $prefix the prefix to use, such as module name or driver being tested
+ *
+ * @return string|false an error message if there's a config problem, or false if OK.
+ */
+function load_test_conf(array $items, $prefix)
+{
+    $config = conf_load('test');
+    $_prefix = 'test_' . $prefix . '_';
+    foreach ($items as $key => $default) {
+        $_key = $_prefix . $key;
+        if (!isset($config[$_key])) {
+            $msg = 'Cannot test "%s", config item "%s" is not set';
+            return sprintf($msg, $prefix, $_key);
+        }
+        conf_check_type(plugin(), $_key, $config[$_key], $default);
+        force_conf($key, $config[$_key]);
+    }
+    return null;
+}
+
+/**
  * Get the path to a plugin config file
  *
  * @private

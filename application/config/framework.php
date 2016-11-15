@@ -1,12 +1,17 @@
 <?php
 
+/**
+ * Configuration options to use when not viewing any plugin (eg, one of the
+ * built-in screens such as the directory homepage)
+ */
+
 $config = array(
 
-    // testing
-    'bitly_shortener_base_url'     =>  'j.mp',
-    'bitly_shortener_api_key'      =>  '',
-    'noshorten_shortener_base_url' =>  'example.com',
-    'noshorten_shortener_api_key'  =>  'keyboard_cat',
+    'description'  => 'Overwrite with your application description',
+    'legal'        => 'Any disclaimer you may have.',
+    'users'        => array(
+        'example'    => 'An Example Passphrase.',
+    ),
 
 );
 
