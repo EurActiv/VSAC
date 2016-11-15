@@ -145,8 +145,13 @@ function router_rebase_url($uri, $base_url = null, $with_scheme = null)
         return $u;
     }; 
 
+    // check for scheme-less URIs
+    if (strpos($uri, '//') === 0) {
+        return $match_scheme($uri);
+    }
+
     // check for fully qualified URIs, data/javascript URIs...
-    if (preg_match('#^([a-z\-]+:)?#i', $uri, $m)) {
+    if (preg_match('#^([a-z\-]+:)#i', $uri, $m)) {
         $scheme = empty($m[1]) ? 'http:' : strtolower($m[1]);
         // don't touch non http (eg, data uris)
         if ($scheme != 'http:' && $scheme != 'https:') {

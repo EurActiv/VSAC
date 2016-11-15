@@ -49,5 +49,8 @@ $config = array(
     'shortener_base_url' =>  '',
     'shortener_api_key'  =>  '', 
 
+    // default configuration of the system log
+    'log_keep_files'     => 20,
+    'log_per_file'       => 500,
 );
 
