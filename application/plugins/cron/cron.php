@@ -44,14 +44,22 @@ $is_single = call_user_func(function () use ($jobs, $safety) {
     $job = $jobs[$job];
     log_log('Running Job <%s>', $job['orig']);
 
-    use_module('http');
-    $response = http_get($job['url'], false, $job['curl_options']);
-    if (!empty($response['error'])) {
-        trigger_error('Invalid cron job response: ' . $job);
-        return array('error' => $response['error']);
+    if (empty($job['curl_options'])) {
+        $cmd = sprintf(
+            'wget -qO- %s >/dev/null 2>/dev/null &',
+            escapeshellarg($job['url'])
+        );
+        exec($cmd);
+    } else {
+        use_module('http');
+        $response = http_get($job['url'], false, $job['curl_options']);
+        if (!empty($response['error'])) {
+            trigger_error('Invalid cron job response: ' . $job);
+            return array('error' => $response['error']);
+        }
     }
     log_log('Ran job     <%s>', $job['orig']);
-    return array('status' => $response['body']);
+    return;
 });
 if (is_array($is_single)) {
     $respond($is_single);
