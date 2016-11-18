@@ -49,6 +49,9 @@ function http_sysconfig()
     if (!function_exists('curl_init')) {
         return 'cURL PHP module is not installed';
     }
+    if (!exec('which wget')) {
+        return 'wget not installed';
+    }
     return true;
 }
 
@@ -176,6 +179,27 @@ function http_post($url, $data, $multipart = false)
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
     return http_exec_curl($ch);
+}
+
+/**
+ * Make a simple GET request in the background and forget it (eg, there is no
+ * response). Useful for sending notifications to other online services. Uses
+ * wget instead of php-curl and passed back to shell for background execution;
+ * it's faster that way.
+ *
+ * @param string $url the URL to get
+ * @return void
+ */
+function http_forget($url)
+{
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        trigger_error('Invalid url: ' . $url);
+        return;
+    }
+    exec(sprintf(
+        'wget -qO- %s >/dev/null 2>/dev/null &',
+        escapeshellarg($url)
+    ));
 }
 
 /**

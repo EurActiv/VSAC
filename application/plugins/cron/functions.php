@@ -24,6 +24,7 @@ function cron_bootstrap()
     use_module('apikey');
     use_module('kval');
     use_module('log');
+    use_module('http');
 }
 
 //----------------------------------------------------------------------------//

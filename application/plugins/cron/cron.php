@@ -44,22 +44,10 @@ $is_single = call_user_func(function () use ($jobs, $safety) {
     $job = $jobs[$job];
     log_log('Running Job <%s>', $job['orig']);
 
-    if (empty($job['curl_options'])) {
-        $cmd = sprintf(
-            'wget -qO- %s >/dev/null 2>/dev/null &',
-            escapeshellarg($job['url'])
-        );
-        exec($cmd);
-    } else {
-        use_module('http');
-        $response = http_get($job['url'], false, $job['curl_options']);
-        if (!empty($response['error'])) {
-            trigger_error('Invalid cron job response: ' . $job);
-            return array('error' => $response['error']);
-        }
-    }
+    // blocking, but we don't care about the response
+    http_get($job['url'], false, $job['curl_options']);
     log_log('Ran job     <%s>', $job['orig']);
-    return;
+    return array('status' => 'Ran job: ' . $job['orig']);
 });
 if (is_array($is_single)) {
     $respond($is_single);
@@ -79,25 +67,28 @@ $status = call_user_func(function () use ($jobs, $safety, $start) {
 
     $statuses = array();
     foreach ($jobs as $md5 => $job) {
-
         if (kval_get($md5 . '_dispatch', $safety)) {
             $statuses[] = 'Job Throttled: ' . $job['orig'];
         } else {
             kval_set($md5 . '_dispatch', true);
-            log_log('Dispatching <%s>', $job['orig']);
-            $url = router_add_query(
-                router_plugin_url('cron.php', true),
-                array(
-                    'api_key' => config('api_key', ''),
-                    'run_job' => $md5,
-                    'log_id'  => $log_id,
-                )
-            );
-            $cmd = sprintf(
-                'wget -qO- %s >/dev/null 2>/dev/null &',
-                escapeshellarg($url)
-            );
-            exec($cmd);
+            // if the job doesn't have any options, fire directly and forget
+            if (empty($job['curl_options'])) {
+                kval_set($md5 . '_run', true);
+                http_forget($job['url']);
+                log_log('Ran job     <%s>', $job['orig']);
+            // if it does have options, fire indirectly and forget
+            } else {
+                $url = router_add_query(
+                    router_plugin_url('cron.php', true),
+                    array(
+                        'api_key' => config('api_key', ''),
+                        'run_job' => $md5,
+                        'log_id'  => $log_id,
+                    )
+                );
+                log_log('Dispatching <%s>', $job['orig']);
+                http_forget($url);
+            }
             $statuses[] = 'Job Dispatched: ' . $job['url'];
         }
     }

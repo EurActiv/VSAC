@@ -102,7 +102,16 @@ function front_controller_resolve($plugin, $file)
  */
 function front_controller_locate_plugin(&$path_info)
 {
-    return count($path_info) > 1 ? array_shift($path_info) : '_framework';
+    if (count($path_info) < 2) {
+        return '_framework';
+    }
+    if (!preg_match('/^[a-z\-\_]+$/', $path_info[0])) {
+        return '_framework';
+    }
+    if (!stream_resolve_include_path('plugins/' . $path_info[0])) {
+        return '_framework';
+    }
+    return array_shift($path_info);
 }
 
 /**

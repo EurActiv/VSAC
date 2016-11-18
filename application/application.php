@@ -644,6 +644,9 @@ function conf_load($plugin)
     static $configs = array();
 
     if (!isset($configs[$plugin])) {
+        if (strpos($plugin, '/') !== false) {
+            err('Cannot traverse directories', $plugin);
+        }
         $conf_file = 'config/' . $plugin . '.php';
         // call user func is a pseudo sandbox
         $conf = call_user_func(function () use ($conf_file) {
