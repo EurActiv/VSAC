@@ -142,19 +142,26 @@ function response_send_304(array $headers)
 function response_send_json($response, $expires = false)
 {
     $headers = array();
-    $body = json_encode($response, JSON_PRETTY_PRINT);
-
+    $body = json_encode(
+        $response,
+        JSON_PRETTY_PRINT |
+        JSON_HEX_QUOT |
+        JSON_HEX_TAG |
+        JSON_HEX_AMP |
+        JSON_HEX_APOS |
+        JSON_PRESERVE_ZERO_FRACTION
+    );
     if ($expires) {
         $headers['Cache-Control'] = 'max-age=' . $expires;
         $headers['Expires'] = time() + $expires;
     }
 
     if ($cb = request_query('callback')) {
-        $headers['Content-Type'] =  'application/javascript';
+        $headers['Content-Type'] =  'application/javascript;charset=utf-8';
         $cb = preg_match('/^[a-z_][a-z0-9_]*$/i', $cb) ? $cb : 'callback';
         $body = sprintf('/* jsonp */ %s(%s);', $cb, $body);
     } else {
-        $headers['Content-Type'] = 'application/json';
+        $headers['Content-Type'] = 'application/json;charset=utf-8';
     }
     response_send($body, $headers);
 

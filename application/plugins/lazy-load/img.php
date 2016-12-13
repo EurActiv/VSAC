@@ -20,7 +20,10 @@ callmap_log($parameters['image']);
 
 response_send(
     $image,
-    array('Content-Type' => 'image/jpeg')
+    array(
+        'Content-Type' => 'image/jpeg',
+        'Expires'      => 2147483640,
+    )
 );
 
 

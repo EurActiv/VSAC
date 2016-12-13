@@ -139,6 +139,7 @@
         var that = {};
         var $img = iftt(is_jquery(image), image, $(image));
         var img = $img[0];
+        var preserve = $img.hasClass('lazy-load-preserve');
 
         // class attributes
         that.uid = Math.floor((1 + Math.random()) * 0x10000).toString(16);
@@ -230,7 +231,7 @@
 
         var needs_upscale = false;
         that.calculate_needs_upscale = function () {
-            if (!needs_upscale) {
+            if (!preserve && !needs_upscale) {
                 needs_upscale = $img.width() > last_width;
             }
         };
@@ -243,7 +244,7 @@
                 i = check_scheme($img.data('src')),
                 b = base_url(),
                 uri;
-            if (!b) {
+            if (preserve || !b) {
                 return i;
             }
             if (p) {

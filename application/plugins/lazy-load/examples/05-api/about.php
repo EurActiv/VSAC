@@ -13,7 +13,8 @@ namespace VSAC;
 
 <p>It accepts the following parameters:</p>
 <ul>
-    <li><code>image</code> is either:
+    <li><code>api_key</code>: (string) the API key.</li>
+    <li><code>image</code> (string) is either:
         <ol>
             <li>The URL to the original image that should be resized. It can be
                 a relative path, an absolute path or a fully qualified url.</li>
@@ -21,12 +22,11 @@ namespace VSAC;
                 to be properly marked up for the lazy loader</li>
         </ol>
     </li>
-    <li><code>strategy</code>: see "Setting up a client", below.</li>
-    <li><code>aspect</code>: the aspect ratio, such as "16x9".</li>
-    <li><code>inline</code>: inline a low quality base-64 encoded image instead
+    <li><code>strategy</code>: (string) see "Setting up a client", below.</li>
+    <li><code>aspect</code>: (string) the aspect ratio, such as "16x9".</li>
+    <li><code>inline</code>: (bool) inline a low quality base-64 encoded image instead
         of the placeholder.</li>
-    <li><code>inline</code>: inline a low quality base-64 encoded image instead
-        of the placeholder.</li>
+    <li><code>preserve</code>: (bool) preserve aspect ratio, bypassing resize service.</li>
 </ul>
 <p>The response will be a JSON encoded object, with the following entries:
 <ul>
