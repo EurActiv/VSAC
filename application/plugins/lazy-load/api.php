@@ -12,7 +12,13 @@ namespace VSAC;
 function ll_attrs_to_array($img)
 {
     $doc = new \DOMDocument();
-    $doc->loadHTML('<html><body>' . $img . '</body></html>');
+    $doc->loadHTML(
+        mb_convert_encoding(
+            '<html><body>' . $img . '</body></html>',
+            'HTML-ENTITIES',
+            'UTF-8'
+        )
+    );
     $xpath = new \DOMXpath($doc);
     $img = $xpath->query('//img');
     if ($img->length != 1) {
@@ -23,7 +29,7 @@ function ll_attrs_to_array($img)
     $attrs = array();
     if ($img->hasAttributes()) {
         foreach ($img->attributes as $attr) {
-            $attrs[$attr->nodeName] = $attr->nodeValue;
+            $attrs[$attr->nodeName] = html_entity_decode($attr->nodeValue);
         }
     }
     return $attrs;
@@ -69,11 +75,7 @@ function ll_modify_img($orig, &$parameters)
         return $orig;
     }
 
-
-    if (strpos($attrs['src'], '//') === 0) {
-        $attrs['src'] = 'http:' . $attrs['src'];
-    }
-
+    $attrs['src'] = http_normalize_url($attrs['src'], true);
     if (!($attrs['src'] = http_uri_is_authorized($attrs['src']))) {
         $parameters['error'] = 'Unauthorized source';
         return $orig;

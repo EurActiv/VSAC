@@ -48,7 +48,17 @@ $content = cal_get_permutation(
         foreach ($feed_content as $item) {
             $formatted = array();
             foreach($fields as $field) {
-                $formatted[$field] = empty($item[$field]) ? '' : $item[$field];
+                $formatted[$field] = '';
+                if (empty($item[$field])) {
+                    $continue;
+                }
+                if ($field == 'enclosure') {
+                    if (is_array($item[$field]) && !empty($item[$field]['@attributes']['url'])) {
+                        $formatted[$field] = $item[$field]['@attributes']['url'];
+                    }
+                } else {
+                    $formatted[$field] = $item[$field];
+                }
             }
             if ($strip_tags) {
                 $formatted = array_map('strip_tags', $formatted);

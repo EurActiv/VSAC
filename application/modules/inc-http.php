@@ -84,6 +84,62 @@ function http_test()
 //-- Public API                                                             --//
 //----------------------------------------------------------------------------//
 
+/**
+ * URLs are often passed as query parameters; they may have some common url
+ * encoding issues.
+ *
+ * @param string $url the URL to encode
+ * @return string $url the normalized URL
+ */
+function http_normalize_url($url, $parse = false)
+{
+    // URL is passed without scheme
+    if (strpos($url, '/') === 0) {
+        $url = 'http:' . $url;
+    }
+    // URL was in pathinfo, so the second "/" in "http://domain" was removed by apache
+    $url = preg_replace('/(http:\/)([^\/])/', '$1/$2', $url);
+    if (!$parse) {
+        return $url;
+    }
+
+    $parsed = parse_url($url);
+    if (empty($parsed['host'])) {
+        return $url;
+    }
+    $url = $parsed['scheme'] . '://';
+    if (!empty($parsed['user'])) {
+        $url .= $parsed['user'];
+        if (!empty($parsed['pass'])) {
+            $url .= ':' . $parsed['pass'];
+        }
+        $url .= '@';
+    }
+    $url .= $parsed['host'];
+    if (!empty($parsed['port'])) {
+        $url .= ':' . $parsed['port'];
+    }
+    $recode = function ($str, $search = '', $replace = '') {
+        $str = rawurlencode(urldecode($str));
+        if ($search) {
+            $str = str_replace($search, $replace, $str);
+        }
+        return $str;
+    };
+    // Path elements not url encoded
+    if (!empty($parsed['path'])) {
+        $url .= $recode($parsed['path'], '%2F', '/');
+    }
+    // Query string not encoded properly
+    if (!empty($parsed['query'])) {
+        $url .= '?' . $recode($parsed['path'], ['%3D','%26','%5B','%5D'], ['=','&','[', ']']);
+    }
+    // Fragment not encoded properly
+    if (!empty($parsed['fragment'])) {
+        $url .= '#' . $recode($parsed['fragment']);
+    }
+    return $url;
+}
 
 /**
  * Check a requested url against the configured domain and url whitelists
@@ -96,12 +152,7 @@ function http_test()
 function http_uri_is_authorized($url, &$error = '')
 {
     $error = '';
-
-    // fix a common urlencoding issues
-    if (strpos($url, '/') === 0) {
-        $url = 'http:' . $url;
-    }
-    $url = preg_replace('/(http:\/)([^\/])/', '$1/$2', $url);
+    $url = http_normalize_url($url);
 
     // invalid urls should never pass
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
